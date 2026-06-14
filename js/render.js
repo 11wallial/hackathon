@@ -11,6 +11,7 @@ import { renderQuiz } from './components/quiz.js';
 import { renderChecklist } from './components/checklist.js';
 import { renderSelfExplain } from './components/self-explain.js';
 import { renderRubricCheck } from './components/rubric-check.js';
+import { renderTwoDPlacement } from './components/two-d-placement.js';
 import {
   markSectionViewed, markInteractiveDone, setChapterComplete, getState,
 } from './state.js';
@@ -38,7 +39,19 @@ export function renderBlock(block, ctx) {
     case 'checklist':
     case 'lab': return renderChecklist(block, { chId: ctx.chId, labKey: ctx.chId + '_' + ctx.key('lab') });
     case 'rubric-check': return renderRubricCheck(block, { chId: ctx.chId, interactiveKey: ctx.key('rubric') });
+    case 'interactive': return renderInteractive(block, ctx);
     default: return placeholder(block);
+  }
+}
+
+// Custom interactives dispatch on block.component so new ones slot in without
+// adding renderer cases. Unknown components fall through to the placeholder.
+function renderInteractive(block, ctx) {
+  switch (block.component) {
+    case 'TwoDPlacement':
+      return renderTwoDPlacement(block, { chId: ctx.chId, interactiveKey: ctx.key('interactive') });
+    default:
+      return placeholder({ type: 'interactive:' + (block.component || 'unknown') });
   }
 }
 

@@ -12,7 +12,7 @@ export function countInteractives(chapter) {
   let n = 0;
   (chapter.sessions || []).forEach((s) => {
     (s.blocks || []).forEach((b) => {
-      if (['flashcards', 'quiz', 'self-explain', 'checklist', 'lab', 'rubric-check'].includes(b.type)) n += 1;
+      if (['flashcards', 'quiz', 'self-explain', 'checklist', 'lab', 'rubric-check', 'interactive'].includes(b.type)) n += 1;
     });
   });
   if (chapter.lab) n += 1;
