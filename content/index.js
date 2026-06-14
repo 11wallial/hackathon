@@ -13,9 +13,16 @@ export const chapters = [
     available: true,
     load: () => import('./chapter-00.js'),
   },
-  // Chapters 1–9 are authored one at a time in later milestones. Placeholders
+  {
+    id: 'ch01',
+    number: 1,
+    title: 'The threat model: secret loyalties',
+    estMinutes: 55,
+    available: true,
+    load: () => import('./chapter-01.js'),
+  },
+  // Chapters 2–9 are authored one at a time in later milestones. Placeholders
   // keep the map visible so the learner sees the journey ahead.
-  { id: 'ch01', number: 1, title: 'The threat model: secret loyalties', available: false },
   { id: 'ch02', number: 2, title: 'The language of the field', available: false },
   { id: 'ch03', number: 3, title: 'Catching it I: black box auditing', available: false },
   { id: 'ch04', number: 4, title: 'Catching it II: probes and interpretability', available: false },

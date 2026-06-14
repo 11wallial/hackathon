@@ -386,6 +386,71 @@ hr { border: none; border-top: 1px solid var(--hairline); margin: 2em 0; }
   margin-top: 0.6rem;
 }
 
+/* 2D placement interactive (Chapter 1). */
+.two-d-placement { margin: 1.6rem 0; }
+.twod-item {
+  margin: 1.2rem 0;
+  padding: 1.1rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.twod-label {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 0.6rem;
+}
+.twod-stage { max-width: 360px; margin: 0 auto; }
+.twod-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none; /* let pointer drag own the gesture */
+}
+
+/* Plot scaffolding. */
+.twod-plot-bg { fill: var(--bg); stroke: var(--hairline); stroke-width: 1; }
+.twod-axis { stroke: currentColor; stroke-width: 1.5; opacity: 0.4; }
+.twod-axis-arrow { fill: currentColor; opacity: 0.4; }
+.twod-axis-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--text-secondary);
+}
+.twod-end {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  fill: var(--muted);
+}
+
+/* Draggable user dot. */
+.twod-user { cursor: grab; outline: none; }
+.twod-user.dragging { cursor: grabbing; }
+.twod-user.locked { cursor: default; }
+.twod-hit { fill: transparent; }
+.twod-user-dot {
+  fill: var(--blue);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+.twod-user:focus-visible .twod-user-dot {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+/* Revealed correct answer. */
+.twod-correct-dot { fill: var(--accent); stroke: var(--bg); stroke-width: 2; }
+.twod-correct-ring { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: 0.5; }
+.twod-connector { stroke: var(--text-secondary); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.6; }
+
+.twod-controls { margin-top: 0.7rem; }
+.twod-explain { margin-top: 0.8rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .twod-user-dot, .twod-correct, .twod-connector { transition: opacity var(--fade) ease; }
+}
+
 /* Code block. */
 .codeblock {
   margin: 1.4rem 0;
