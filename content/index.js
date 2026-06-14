@@ -21,9 +21,16 @@ export const chapters = [
     available: true,
     load: () => import('./chapter-01.js'),
   },
-  // Chapters 2–9 are authored one at a time in later milestones. Placeholders
+  // Chapters 3–9 are authored one at a time in later milestones. Placeholders
   // keep the map visible so the learner sees the journey ahead.
-  { id: 'ch02', number: 2, title: 'The language of the field', available: false },
+  {
+    id: 'ch02',
+    number: 2,
+    title: 'The language of the field',
+    estMinutes: 50,
+    available: true,
+    load: () => import('./chapter-02.js'),
+  },
   { id: 'ch03', number: 3, title: 'Catching it I: black box auditing', available: false },
   { id: 'ch04', number: 4, title: 'Catching it II: probes and interpretability', available: false },
   { id: 'ch05', number: 5, title: 'The toolkit (hands on)', available: false },

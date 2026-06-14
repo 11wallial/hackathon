@@ -12,6 +12,7 @@ import { renderChecklist } from './components/checklist.js';
 import { renderSelfExplain } from './components/self-explain.js';
 import { renderRubricCheck } from './components/rubric-check.js';
 import { renderTwoDPlacement } from './components/two-d-placement.js';
+import { renderTermInTheWild } from './components/term-in-the-wild.js';
 import {
   markSectionViewed, markInteractiveDone, setChapterComplete, getState,
 } from './state.js';
@@ -50,6 +51,8 @@ function renderInteractive(block, ctx) {
   switch (block.component) {
     case 'TwoDPlacement':
       return renderTwoDPlacement(block, { chId: ctx.chId, interactiveKey: ctx.key('interactive') });
+    case 'TermInTheWild':
+      return renderTermInTheWild(block, { chId: ctx.chId, interactiveKey: ctx.key('interactive') });
     default:
       return placeholder({ type: 'interactive:' + (block.component || 'unknown') });
   }
