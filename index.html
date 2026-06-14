@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A calm, self-paced trainer for the Detection & Auditing (Track 2) stream of the Secret Loyalties Hackathon." />
+  <title>Secret Loyalties — Track 2 Trainer</title>
+  <link rel="stylesheet" href="./css/app.css" />
+  <!-- Theme is applied before paint to avoid a flash of the wrong mode. -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('slh_trainer_v1');
+        var theme = raw ? (JSON.parse(raw).theme || 'system') : 'system';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'system');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="app-shell">
+    <!-- Top bar (mobile) / brand (desktop) -->
+    <header class="topbar">
+      <a class="brand" href="#/dashboard">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">Track 2 Trainer</span>
+      </a>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch colour theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <!-- Quiet left nav (desktop) -->
+    <nav class="sidenav" aria-label="Chapters and sections">
+      <div id="sidenav-body"></div>
+    </nav>
+
+    <!-- Centred reading column -->
+    <main id="main" class="reading" tabindex="-1">
+      <div id="view"></div>
+    </main>
+
+    <!-- Slim right rail (wide screens) -->
+    <aside class="rail" aria-label="Next action and reviews">
+      <div id="rail-body"></div>
+    </aside>
+
+    <!-- Mobile bottom bar -->
+    <nav class="bottombar" aria-label="Primary">
+      <a href="#/dashboard" data-tab="dashboard">
+        <span class="bb-icon" aria-hidden="true">⌂</span><span class="bb-label">Home</span>
+      </a>
+      <a href="#/chapters" data-tab="chapters">
+        <span class="bb-icon" aria-hidden="true">▤</span><span class="bb-label">Chapters</span>
+      </a>
+      <a href="#/review" data-tab="review">
+        <span class="bb-icon" aria-hidden="true">↻</span><span class="bb-label">Review</span>
+        <span id="bb-review-badge" class="bb-badge" hidden>0</span>
+      </a>
+      <a href="#/glossary" data-tab="glossary">
+        <span class="bb-icon" aria-hidden="true">≡</span><span class="bb-label">Glossary</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
