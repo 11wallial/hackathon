@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tfm-edge"
+version = "0.1.0"
+description = "Adversarial test harness: does TimesFM have an exploitable directional edge on a financial instrument?"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.0",
+  "scipy>=1.11",
+  "statsmodels>=0.14",
+  "arch>=6.0",
+  "matplotlib>=3.8",
+  "pyarrow>=14",
+  "pyyaml>=6",
+  "requests>=2.31",
+]
+
+[project.optional-dependencies]
+timesfm = ["timesfm>=3.0.1", "torch>=2.0"]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["tfm_edge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
