@@ -22,7 +22,10 @@ from ..features.samples import build_samples, context_window, log_returns
 from ..model.baselines import BASELINES
 from ..model.factory import make_forecaster
 from . import metrics as M
-from .gate import evaluate_gate
+from .feasibility import min_track_record_years, naive_break_even_hit_rate
+from .gate import evaluate_gate, evaluate_strategy_gate
+from .deflated_sharpe import sharpe as _sharpe
+from .portfolio import expanding_standardise, sweep as strategy_sweep
 from .ledger import Ledger
 from .report import reliability_diagram, save_json, write_report
 from .walkforward import assert_no_overlap, make_folds
@@ -85,6 +88,7 @@ def evaluate_forecaster(name, fc, lc, r, samples, folds, cfg: RunConfig, n_tests
                         for k, v in dataclasses.asdict(M.calibration(y_cc, q)).items()},
         "per_fold": per_fold,
         "_arrays": {"pred": p, "quant": q, "mask": m},
+        "_folds": fold_of[m],
     }
 
 
@@ -120,9 +124,37 @@ def run(cfg: RunConfig, log=print) -> dict:
     be2 = M.break_even_hit_rate(y_oo, 2 * rt)
     best_const = M.best_constant_sign_rate(y_oo)
 
-    candidate = {k: v for k, v in results[cand_name].items() if k != "_arrays"}
-    baselines = {k: {kk: vv for kk, vv in v.items() if kk != "_arrays"} for k, v in results.items() if k != cand_name}
+    # Turnover-aware, selective evaluation. The hit-rate diagnostic above assumes the
+    # worst possible execution of the signal: flip on every bar and pay a full round trip
+    # each time. A real implementation holds when the side is unchanged and stands aside
+    # when the forecast is small, so the gate must also see the strategy it would run.
+    bpy = _bars_per_year(cfg.data.bar)
+    for name, r in results.items():
+        arr = r["_arrays"]
+        z = expanding_standardise(arr["pred"])
+        sw = strategy_sweep(z, samples.y_oo[arr["mask"]], rt, bpy,
+                            cfg.strategy.taus, cfg.strategy.sizings, n_prior_trials=n_tests,
+                            alpha=cfg.strategy.dsr_alpha)
+        # per-fold consistency is measured on the WINNING cell, not an arbitrary threshold
+        fold_sharpes = []
+        for k in sorted(set(r["_folds"])):
+            fm = r["_folds"] == k
+            seg = sw.best_net[fm]
+            fold_sharpes.append(float(_sharpe(seg) * np.sqrt(bpy)) if len(seg) > 10 else 0.0)
+        d = dataclasses.asdict(sw)
+        d.pop("best_net", None)
+        r["strategy"] = {
+            "sweep": d, "sharpe_2x": sw.best["sharpe_annual_2x"], "fold_sharpes": fold_sharpes,
+            "years_of_data": float(arr["mask"].sum() / bpy),
+            "years_to_prove": min_track_record_years(sw.best["sharpe_annual"]),
+        }
+
+    candidate = {k: v for k, v in results[cand_name].items() if not k.startswith("_")}
+    baselines = {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in results.items() if k != cand_name}
     gate = evaluate_gate(candidate, baselines, be1, be2, best_const, cfg.stats.max_mean_abs_coverage_error)
+    strat_gate = evaluate_strategy_gate(
+        candidate["strategy"], {k: v["strategy"] for k, v in baselines.items() if k not in ("zero", "ewma", "garch")},
+        cfg.strategy.dsr_alpha)
 
     ledger.record(cfg.variant_hash(), cfg.variant_key(), {
         "hit_rate_oo": candidate["hit_oo"]["hit_rate"], "p_value": candidate["hit_oo"]["p_value"],
@@ -144,7 +176,8 @@ def run(cfg: RunConfig, log=print) -> dict:
         "break_even_1x": be1, "break_even_2x": be2, "best_constant_sign": best_const,
         "ledger_count": n_tests, "ledger_summary": ledger.holm_bh_summary(cfg.stats.alpha),
         "candidate": candidate, "baselines": baselines, "per_fold": candidate["per_fold"],
-        "gate": dataclasses.asdict(gate), "reliability_png": png.name, "assumptions": ASSUMPTIONS,
+        "gate": dataclasses.asdict(gate), "strategy_gate": dataclasses.asdict(strat_gate),
+        "reliability_png": png.name, "assumptions": ASSUMPTIONS,
         "runtime_s": time.time() - t_start,
     }
     if hasattr(cand, "n_model_calls"):
@@ -152,8 +185,11 @@ def run(cfg: RunConfig, log=print) -> dict:
         res["timesfm_cache_hits"] = cand.n_cache_hits
     save_json(res, out_dir / f"phase1_{cfg.name}.json")
     write_report(res, out_dir / f"phase1_{cfg.name}.md")
-    log(f"== verdict: {gate.verdict}")
+    log(f"== hit-rate verdict: {gate.verdict}")
     for rr in gate.reasons:
+        log("   - " + rr)
+    log(f"== strategy verdict (turnover-aware, selective): {strat_gate.verdict}")
+    for rr in strat_gate.reasons:
         log("   - " + rr)
     log(f"== report: {out_dir / f'phase1_{cfg.name}.md'}  ({res['runtime_s']:.0f}s)")
     return res

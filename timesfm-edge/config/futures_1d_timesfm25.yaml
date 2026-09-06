@@ -1,0 +1,34 @@
+# RECOMMENDED SETUP 2: the cheapest single instrument available to a retail account.
+#
+# ES/MES on daily bars needs a 0.506 hit rate to break even, against 0.738 for hourly
+# BTC perps: the same edge is roughly forty times easier to monetise. What it lacks is
+# breadth, so a real result still needs decades to prove at low Sharpe. Run it alongside
+# the cross-sectional config, not instead of it.
+#
+# There is no free futures bar API, so this reads a CSV you supply:
+#   open_time,open,high,low,close,volume   with open_time the bar START.
+# Continuous back-adjusted contracts introduce their own artefacts at each roll; prefer
+# a series built from the front contract with roll gaps handled explicitly.
+name: futures_1d_timesfm25
+data:
+  source: csv
+  csv_path: data/mes_1d.csv
+  bar: 1d
+forecast:
+  forecaster: timesfm
+  model_id: google/timesfm-2.5-200m-pytorch
+  model_family: timesfm2.5
+  input_mode: log_price
+  context_len: 512
+  horizon: 1
+  device: cpu
+walkforward:
+  n_splits: 8
+  embargo_bars: 5
+  min_train_bars: 500
+costs:
+  commission_bps: 0.35      # ~$1.00 round turn on a $30k MES notional
+  half_spread_bps: 0.42     # one tick, 0.25 pt = $1.25
+  slippage_bps: 0.0         # one lot in the deepest futures book in the world
+stats:
+  ledger_path: reports/experiment_ledger.json

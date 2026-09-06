@@ -1,0 +1,61 @@
+# RECOMMENDED SETUP 1: cross-sectional, market-neutral, daily, residualised inputs.
+#
+# The cost hurdle on a dollar-neutral crypto book at daily bars is ~0.53 on relative
+# moves versus 0.74 for hourly single-instrument BTC, and breadth cuts the track record
+# needed to prove a result roughly in half. Note the residual vol, not the raw vol, is
+# what the edge has to beat, and taker fees are still the binding constraint here:
+# check the smoothing rows of the sweep, not just the headline Sharpe.
+#
+# Symbols must be reconstructed as the universe stood at each point in time. This fixed
+# list is survivorship-biased and is a starting point, not a research universe.
+name: xs_crypto_1d_timesfm25
+data:
+  source: binance
+  market: um
+  bar: 1d
+  years: 4
+cross_section:
+  enabled: true
+  residualise: beta
+  top_fraction: 0.2
+  symbols:
+    - BTCUSDT
+    - ETHUSDT
+    - BNBUSDT
+    - SOLUSDT
+    - XRPUSDT
+    - ADAUSDT
+    - AVAXUSDT
+    - DOGEUSDT
+    - DOTUSDT
+    - LINKUSDT
+    - LTCUSDT
+    - BCHUSDT
+    - ATOMUSDT
+    - ETCUSDT
+    - FILUSDT
+    - NEARUSDT
+    - APTUSDT
+    - ARBUSDT
+    - OPUSDT
+    - INJUSDT
+forecast:
+  forecaster: timesfm
+  model_id: google/timesfm-2.5-200m-pytorch
+  model_family: timesfm2.5
+  input_mode: log_price
+  context_len: 512
+  horizon: 1
+  device: cpu
+  batch_size: 32
+walkforward:
+  n_splits: 6
+  embargo_bars: 5
+  min_train_bars: 400
+  max_test_points: 120      # per fold; x 20 assets = 2400 TimesFM calls per fold
+costs:
+  commission_bps: 5.0
+  half_spread_bps: 0.5
+  slippage_bps: 2.0
+stats:
+  ledger_path: reports/experiment_ledger.json

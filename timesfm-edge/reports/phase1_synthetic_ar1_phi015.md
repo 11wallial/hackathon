@@ -1,10 +1,10 @@
 # Phase 1 report: synthetic_ar1_phi015
 
-Generated 2026-09-06T08:00:44.446680+00:00. Config hash `fde2de1b84b5`.
+Generated 2026-09-06T08:59:59.562472+00:00. Config hash `24b78bca6cd0`.
 
 **Verdict: `STOP`**  (Test A FAIL, Test A at 2x costs FAIL, Test B FAIL)
 
-- adjusted lower bound 0.5400 vs break-even 0.7378 (1x) / 0.9757 (2x): fails 1x, fails 2x
+- adjusted lower bound 0.5395 vs break-even 0.7378 (1x) / 0.9757 (2x): fails 1x, fails 2x
 - hit rate 0.5477 vs last_sign 0.5504: does not beat
 - hit rate 0.5477 vs best constant sign 0.5083: beats
 - mean abs coverage error 0.0358 (limit 0.05): ok
@@ -18,16 +18,16 @@ Generated 2026-09-06T08:00:44.446680+00:00. Config hash `fde2de1b84b5`.
 - Costs (per side bps): commission 5.0, half-spread 0.5, slippage 2.0; round trip 15.0 bps (1x), 30.0 bps (2x)
 - Mean |tradable 1-bar return|: 31.5 bps
 - **Break-even hit rate: 0.7378 (1x), 0.9757 (2x)**
-- **Configuration variants in ledger (N for adjustment): 2**; this run's adjusted alpha = 0.05/2 = 0.02500
-- Ledger-wide survivors: Holm 1, BH 1 of 2 variants with p-values
+- **Configuration variants in ledger (N for adjustment): 3**; this run's adjusted alpha = 0.05/3 = 0.01667
+- Ledger-wide survivors: Holm 2, BH 2 of 3 variants with p-values
 
 ## Test A: directional edge (tradable open-to-open return)
 
 | forecaster | n | hit rate | 95% CI | adj. lower bound | p (one-sided) | IC (Spearman) | IC 95% CI | trade frac | net/bar 1x (bps) | Sharpe 1x | net/bar 2x (bps) | Sharpe 2x |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **ar1 (candidate)** | 16998 | 0.5477 | [0.5400, 0.5550] | 0.5400 | 0.0000 | 0.1351 | [0.1203, 0.1492] | 1.00 | -10.42 | -23.89 | -25.42 | -58.28 |
+| **ar1 (candidate)** | 16998 | 0.5477 | [0.5400, 0.5550] | 0.5395 | 0.0000 | 0.1351 | [0.1203, 0.1492] | 1.00 | -10.42 | -23.89 | -25.42 | -58.28 |
 | zero | 0 | nan | [nan, nan] | nan | nan | nan | [nan, nan] | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
-| last_sign | 16998 | 0.5504 | [0.5428, 0.5577] | 0.5428 | 0.0000 | 0.1035 | [0.0901, 0.1176] | 1.00 | -10.28 | -23.58 | -25.28 | -57.98 |
+| last_sign | 16998 | 0.5504 | [0.5428, 0.5577] | 0.5422 | 0.0000 | 0.1035 | [0.0901, 0.1176] | 1.00 | -10.28 | -23.58 | -25.28 | -57.98 |
 | ewma | 0 | nan | [nan, nan] | nan | nan | nan | [nan, nan] | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
 | garch | 0 | nan | [nan, nan] | nan | nan | nan | [nan, nan] | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
 

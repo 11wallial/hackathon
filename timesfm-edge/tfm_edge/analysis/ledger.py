@@ -8,6 +8,10 @@ Rules:
   - Baselines evaluated *alongside* a candidate are not separate hypotheses:
     they are comparators, not candidates for trading. The candidate forecaster of
     each run is the hypothesis. If you run a baseline *as* the candidate, it counts.
+  - Adding a field to RunConfig.variant_key() changes every hash, so variants recorded
+    before the change reappear as new ones and the count is inflated. That is left
+    uncorrected on purpose: a larger N makes every correction STRICTER, so the error is
+    in the conservative direction. Never renumber a ledger to reduce N.
 """
 from __future__ import annotations
 

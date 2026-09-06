@@ -36,6 +36,14 @@ class Fold:
 
 
 def make_folds(samples: Samples, cfg: WalkForwardConfig) -> list[Fold]:
+    return make_folds_from_index(samples.t, samples.horizon, cfg)
+
+
+def make_folds_from_index(t_index: np.ndarray, horizon: int, cfg: WalkForwardConfig) -> list[Fold]:
+    """Fold construction from decision indices alone, so panels and single series share
+    the same purge and embargo logic."""
+    samples = Samples(t=t_index, decision_at=t_index, executes_at=t_index,
+                      y_cc=t_index, y_oo=t_index, last_ret=t_index, horizon=horizon)
     H = samples.horizon
     eligible = np.where(samples.t >= cfg.min_train_bars)[0]
     if len(eligible) < cfg.n_splits * 10:

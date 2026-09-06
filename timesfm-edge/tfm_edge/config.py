@@ -66,6 +66,34 @@ class ForecastConfig:
 
 
 @dataclass(frozen=True)
+class CrossSectionConfig:
+    """Cross-sectional (panel) mode. This is the setup that clears the cost hurdle:
+    a dollar-neutral book removes the market factor from the target, residualising
+    removes it from the model input, and breadth multiplies the Sharpe by roughly the
+    square root of the number of independent bets."""
+    enabled: bool = False
+    n_assets: int = 60
+    symbols: list[str] | None = None      # None with source=binance means "top N by volume"
+    residualise: str = "beta"             # none | demean | beta
+    top_fraction: float = 0.2             # long the top 20%, short the bottom 20%
+    gross: float = 1.0                    # total absolute exposure
+    synthetic_phi_idio: float = 0.0       # planted idiosyncratic AR(1) for the self-tests
+
+
+@dataclass(frozen=True)
+class StrategyConfig:
+    """Turnover-aware, selective execution. The naive every-bar sign flip the Phase 1
+    diagnostic reports is the worst possible execution of a signal; these are the knobs
+    a real implementation has for free."""
+    taus: tuple = (0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)
+    sizings: tuple = ("binary", "linear", "kelly")
+    top_fractions: tuple = (0.1, 0.2, 0.3, 0.5)   # cross-sectional mode
+    smoothing_halflives: tuple = (0.0, 2.0, 5.0, 10.0)   # EWMA halflife on scores, in bars
+    rebalance_intervals: tuple = (1, 5)                  # hold the book this many bars
+    dsr_alpha: float = 0.05
+
+
+@dataclass(frozen=True)
 class WalkForwardConfig:
     n_splits: int = 8
     embargo_bars: int = 24           # bars skipped after a test block before training may resume
@@ -89,6 +117,8 @@ class RunConfig:
     data: DataConfig = field(default_factory=DataConfig)
     forecast: ForecastConfig = field(default_factory=ForecastConfig)
     walkforward: WalkForwardConfig = field(default_factory=WalkForwardConfig)
+    cross_section: CrossSectionConfig = field(default_factory=CrossSectionConfig)
+    strategy: StrategyConfig = field(default_factory=StrategyConfig)
     costs: CostModel = field(default_factory=CostModel)
     stats: StatsConfig = field(default_factory=StatsConfig)
     report_dir: str = "reports"
@@ -109,6 +139,7 @@ class RunConfig:
             "forecast": {k: v for k, v in dataclasses.asdict(self.forecast).items()
                          if k not in ("cache_dir", "batch_size", "device")},
             "walkforward": dataclasses.asdict(self.walkforward),
+            "cross_section": dataclasses.asdict(self.cross_section),
         }
 
     def variant_hash(self) -> str:
@@ -131,6 +162,8 @@ def load_config(path: str | Path) -> RunConfig:
         data=_build(DataConfig, raw.get("data", {})),
         forecast=_build(ForecastConfig, raw.get("forecast", {})),
         walkforward=_build(WalkForwardConfig, raw.get("walkforward", {})),
+        cross_section=_build(CrossSectionConfig, raw.get("cross_section", {})),
+        strategy=_build(StrategyConfig, raw.get("strategy", {})),
         costs=_build(CostModel, raw.get("costs", {})),
         stats=_build(StatsConfig, raw.get("stats", {})),
         report_dir=raw.get("report_dir", "reports"),

@@ -1,5 +1,10 @@
 # Findings
 
+> **Update.** The original setup could not have passed. It needed a 73.8% hit rate to
+> break even, and that number came from the configuration, not from the model or the
+> market. [`SETUP.md`](SETUP.md) works out why, and what to run instead. This document
+> records what the first pass found; read both.
+
 Status: **Phase 1 harness built and validated on synthetic data. No real-data result
 yet.** The container this was built in cannot reach Binance, Yahoo or HuggingFace,
 so the gate has not been run on the real instrument. Everything below is what
@@ -83,15 +88,75 @@ Written before the real run, so it cannot be tuned to the result:
 8. Binance perpetual klines represent a tradable price. Cross-venue arbitrage makes
    the printed close stale by the next open.
 
+## The setup was the binding constraint, not the model
+
+Point 3 above turned out to be the whole story, and it is fixable. Working through the
+arithmetic (full derivation in [`SETUP.md`](SETUP.md)):
+
+- The break-even hit rate reduces to `0.5 + 0.627k` where `k` is round-trip cost divided
+  by per-bar volatility. `k` ranges from 0.379 (hourly BTC perps at taker fees) to 0.009
+  (index futures on daily bars) across ordinary retail-accessible setups. The original
+  configuration sat at the worst end of a forty-fold range.
+- The harness itself was charging a full round trip on every bar rather than on position
+  change, overstating costs by at least 2x. That was a bug in the pessimistic direction.
+- A dollar-neutral cross-sectional book removes the market factor, which is the least
+  predictable and most volatile part of the return, from both the model input and the
+  target. On the synthetic panel that lifts IC from 0.070 to 0.101 while cutting target
+  volatility from 364 to 300 bps.
+- Breadth is the only lever that improves statistical power as well as return. It takes
+  the track record needed to distinguish a result from luck from 9.7 years to 4.9.
+
+Demonstrated end to end: one synthetic panel, one small planted idiosyncratic edge
+(phi = 0.06), five ways of trading it.
+
+| setup | IC | Sharpe | Sharpe 2x | DSR | verdict |
+|---|---|---|---|---|---|
+| 1 asset, daily, crypto taker | 0.028 | 0.85 | 0.55 | 0.630 | `STOP` |
+| 60 assets, no residualisation | 0.050 | 3.65 | 1.74 | 0.860 | `STOP` |
+| 60 assets, beta residualisation | 0.061 | 3.87 | 1.83 | 0.972 | `PROCEED` |
+| 60 assets, maker fees | 0.061 | 7.13 | 6.10 | 1.000 | `PROCEED` |
+| 60 assets, equity fees | 0.061 | 7.39 | 6.61 | 1.000 | `PROCEED` |
+
+Nothing about the signal changes between rows. These Sharpe levels are far above
+anything real data will produce; the ratios between rows are the finding.
+
+**This does not mean an edge exists.** It means the experiment became worth running.
+The hurdle went from impossible to plausible; whether TimesFM clears it is still open,
+and the honest prior for a zero-shot foundation model on liquid instruments is an IC
+near zero.
+
 ## What to do next
 
-1. On a machine with network access: `./run_phase1.sh`. It runs the tests, both
-   self-tests, then `config/btc_1h_timesfm25.yaml` (about 12,000 TimesFM calls,
-   one to two hours on a 4-core CPU; forecasts are cached).
-2. Read the verdict line first, then the per-fold table, then the last-sign row.
-3. If the verdict is VOL_MODEL_ONLY: that is a usable result. A calibrated
-   distribution of the next hour's return is worth something for position sizing,
-   option-implied-vol comparison, and for setting bracket widths, but it is not a
+1. On a machine with network access: `./run_phase1.sh`. It runs the tests, the
+   feasibility survey, all four self-tests, and the setup comparison.
+2. Then run the two configurations worth running:
+   `./run_phase1.sh --xs config/xs_crypto_1d_timesfm25.yaml` and, if you have futures
+   bars, `./run_phase1.sh config/futures_1d_timesfm25.yaml`. Do not start with
+   `config/btc_1h_timesfm25.yaml`; it is kept as the record of where this began.
+3. Read the strategy verdict and the hit-rate verdict together, then the per-fold row,
+   then the last-sign baseline. If last-sign wins you have rediscovered momentum.
+4. If the verdict is VOL_MODEL_ONLY: that is a usable result. A calibrated distribution
+   of the next period's return is worth money for position sizing (volatility-managed
+   portfolios are a documented source of Sharpe improvement), for setting bracket widths
+   that stay stable across regimes, and for timing variance-premium trades. It is not a
    trading signal and Phase 2 as specified should not be built.
-4. If the verdict is STOP: stop. Do not tune. The ledger will record every variant
-   you try anyway.
+5. If the verdict is STOP on a setup whose feasibility row said it was reachable: stop.
+   Do not tune. The ledger records every variant you try anyway, and the deflated Sharpe
+   uses that count.
+
+## New risks introduced by the better setup
+
+The levers are arithmetic and they are sound, but the risks moved rather than vanished.
+Fuller list in `SETUP.md` section 6.
+
+1. **Maker fills are not backtestable from OHLCV bars.** No adverse selection, no fill
+   failure, and the unfilled bars are exactly the favourable ones. Treat every maker
+   number here as an upper bound.
+2. **Effective breadth is a guess.** Twelve independent bets from sixty crypto perps is
+   plausible, not measured. Measure it from the residual correlation matrix.
+3. **Panel survivorship.** A universe picked today by liquidity is a list of survivors.
+   It must be reconstructed as it stood at each point in time.
+4. **Cross-sectional books carry borrow, funding and 60 spreads** that the
+   single-instrument case does not.
+5. **Costs are state-dependent and modelled as constant**, and they widen precisely in
+   the volatile bars a selective strategy most wants to trade.

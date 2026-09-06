@@ -123,6 +123,33 @@ def write_report(res: dict, out_md: Path) -> None:
         lines.append(f"| {name} | " + " | ".join(_f(qc[str(float(l))], 3) for l in QUANTILE_LEVELS) + " |")
     lines.append("")
     lines.append(f"![reliability]({res['reliability_png']})\n")
+    sg = res.get("strategy_gate")
+    if sg:
+        lines.append("## Strategy view: turnover-aware and selective\n")
+        lines.append("The hit-rate test above assumes the worst possible execution of the signal: flip "
+                     "on every bar and pay a full round trip each time. A real implementation holds when "
+                     "the side is unchanged and stands aside when the forecast is small. This section "
+                     "evaluates that strategy instead, and scores it with a Deflated Sharpe Ratio that "
+                     "counts every cell of the threshold/sizing sweep as a trial.\n")
+        lines.append(f"**Strategy verdict: `{sg['verdict']}`**\n")
+        for r in sg["reasons"]:
+            lines.append(f"- {r}")
+        lines.append("")
+        lines.append("| forecaster | best tau | sizing | trade frac | turnover/bar | net bps/bar | Sharpe | Sharpe 2x | DSR |")
+        lines.append("|---|---|---|---|---|---|---|---|---|")
+        for name, r in rows:
+            st = r.get("strategy")
+            if not st:
+                continue
+            b = st["sweep"]["best"]
+            lines.append(f"| {name} | {b['tau']} | {b['sizing']} | {_f(b['trade_fraction'],2)} | "
+                         f"{_f(b['turnover_per_bar'],2)} | {_f(b['mean_net_bps'],2)} | {_f(b['sharpe_annual'],2)} | "
+                         f"{_f(b['sharpe_annual_2x'],2)} | {_f(st['sweep']['dsr']['deflated_sharpe'],4)} |")
+        lines.append("")
+        cs = res["candidate"]["strategy"]
+        lines.append(f"Candidate per-fold Sharpe on the winning cell: {[round(x,2) for x in cs['fold_sharpes']]}.")
+        lines.append(f"Track record needed to detect Sharpe {cs['sweep']['best']['sharpe_annual']:.2f}: "
+                     f"{cs['years_to_prove']:.1f} years; available {cs['years_of_data']:.1f}.\n")
     lines.append(SPURIOUS.format(n_splits=w["n_splits"], years=res["years_covered"], block_len=c["hit_oo"]["block_len"]))
     lines.append("## Assumptions most likely to be wrong\n")
     for a in res["assumptions"]:
