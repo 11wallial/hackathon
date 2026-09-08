@@ -1,0 +1,9 @@
+cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+reports/*.png
+!reports/feasibility.png
+reports/*.json
+!reports/experiment_ledger*.json
+reports/compare/

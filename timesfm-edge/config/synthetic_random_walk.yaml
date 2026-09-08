@@ -1,0 +1,21 @@
+# Harness self-test 1: a martingale with GARCH volatility. There is NO edge here by
+# construction. Any forecaster whose adjusted lower bound clears break-even on this
+# series is proof of a leak in the harness, not of skill.
+name: synthetic_random_walk
+data:
+  source: synthetic
+  synthetic_kind: random_walk
+  synthetic_n: 20000
+  synthetic_seed: 1
+  bar: 1h
+forecast:
+  forecaster: ar1          # candidate: the strongest cheap directional model
+  input_mode: log_price
+  context_len: 512
+  horizon: 1
+walkforward:
+  n_splits: 8
+  embargo_bars: 24
+  min_train_bars: 3000
+stats:
+  ledger_path: reports/experiment_ledger_synthetic.json
