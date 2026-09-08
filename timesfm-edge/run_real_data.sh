@@ -18,14 +18,23 @@ die() { printf '\n\033[31mSTOP: %s\033[0m\n' "$*" >&2; exit 1; }
 
 say "0/5  Preflight: can this machine actually reach the data and the weights?"
 fail=0
-for url in https://stooq.com/q/d/l/?s=aapl.us\&i=d \
-           https://fapi.binance.com/fapi/v1/ping \
-           https://huggingface.co/api/models/google/timesfm-2.5-200m-pytorch; do
-  code=$(curl -sS -m 25 -o /dev/null -w '%{http_code}' "$url" 2>/dev/null) || true
+probe() {  # $1 url, $2 what it is, $3 "soft" to warn instead of fail
+  local code
+  code=$(curl -sS -m 25 -o /dev/null -w '%{http_code}' -L "$1" 2>/dev/null) || true
   code=${code:-000}
-  if [[ "$code" == "200" ]]; then printf '  ok    %s\n' "$url"
-  else printf '  FAIL  %s  (HTTP %s)\n' "$url" "$code"; fail=1; fi
-done
+  # any real HTTP response proves the host is reachable; 000 means blocked or refused
+  if [[ "$code" != "000" ]]; then printf '  ok    %-52s (HTTP %s) %s\n' "$1" "$code" "$2"
+  elif [[ "${3:-}" == "soft" ]]; then printf '  warn  %-52s (HTTP 000) %s\n' "$1" "$2"
+  else printf '  FAIL  %-52s (HTTP 000) %s\n' "$1" "$2"; fail=1; fi
+}
+probe "https://stooq.com/q/d/l/?s=aapl.us&i=d"                             "equity bars"
+probe "https://huggingface.co/api/models/google/timesfm-2.5-200m-pytorch"  "model metadata"
+# The weights themselves do NOT come from huggingface.co. hf_xet is enabled by default
+# and redirects the actual bytes to the Xet CAS CDN, so an allowlist containing only
+# huggingface.co downloads the metadata and then dies on the download. Test that host
+# separately, because it is the single most common way a partial allowlist fails.
+probe "https://cas-bridge.xethub.hf.co/"                                   "model weights CDN (Xet)"
+probe "https://fapi.binance.com/fapi/v1/ping"                              "crypto bars (optional)" soft
 if [[ $fail -eq 1 ]]; then
   die "One or more hosts above are unreachable, so this stops here rather than half-running.
 
@@ -36,8 +45,12 @@ if [[ $fail -eq 1 ]]; then
     - a corporate or sandbox egress policy that only allows an approved list of hosts
     - Binance blocks some countries outright; a different host or region fixes that
     - Stooq rate-limits heavy use; wait a few minutes and retry
-  You do not need all three. To run only what you can reach:
-    equity only:  ./run_real_data.sh --skip-install && python -m tfm_edge.analysis.panel_run --config $EQUITY_CFG
+  If only the Xet CDN line failed, you can avoid that host entirely:
+    export HF_HUB_DISABLE_XET=1     # weights then come from cdn-lfs*.huggingface.co
+  and allow cdn-lfs.huggingface.co plus cdn-lfs-us-1.huggingface.co instead.
+
+  You do not need every host. To run only what you can reach:
+    equity only:  python -m tfm_edge.analysis.panel_run --config $EQUITY_CFG
     no network:   ./run_phase1.sh          (synthetic self-tests and the feasibility survey)"
 fi
 

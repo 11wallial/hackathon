@@ -46,8 +46,10 @@ Apache-2.0. The default config uses 2.5 for that reason.
 ./run_real_data.sh        # preflight, install, feasibility, self-tests, then the real runs
 ```
 
-Needs open access to `stooq.com` (equity bars), `fapi.binance.com` (crypto bars) and
-`huggingface.co` (weights). The script checks all three first and stops with a clear
+Needs network access to a short list of hosts, given in **[`ALLOWLIST.md`](ALLOWLIST.md)**.
+Note that `huggingface.co` alone is not enough: weights are served from the Xet CDN
+(`cas-bridge.xethub.hf.co`), so a partial allowlist fetches the metadata and then fails
+the download. The script checks all three first and stops with a clear
 message rather than half-running. Roughly 2-4 hours on a 4-core CPU, nearly all of it
 TimesFM inference; forecasts are cached by content, so an interrupted run resumes for
 free by re-running the same command.
