@@ -40,7 +40,27 @@ non-commercial, non-production licence. Running them through Phase 1 is
 research; trading money on them is not permitted. TimesFM 2.5 weights are
 Apache-2.0. The default config uses 2.5 for that reason.
 
-## One command
+## Running on real market data
+
+```bash
+./run_real_data.sh        # preflight, install, feasibility, self-tests, then the real run
+```
+
+Needs open access to `fapi.binance.com` (bars) and `huggingface.co` (weights); the script
+checks both first and stops with a clear message rather than half-running. Roughly 1-3
+hours on a 4-core CPU, nearly all of it TimesFM inference. Forecasts are cached by
+content, so an interrupted run resumes for free by re-running the same command.
+
+**What the arithmetic already says about this run, before it happens.** At a plausible
+IC of 0.03, a 50-name daily crypto book at taker fees reaches Sharpe ~0.29 and needs
+about 40 years of history to tell that apart from luck. Binance perpetuals offer about
+four. So expect the power criterion to fail even if the edge is real: the honest verdict
+will likely be `STOP` or `PROCEED_UNDERPOWERED`. Run it for the measurement, not for a
+verdict. The only setup in the survey that clears both the cost hurdle and the power
+requirement is a US equity cross-section with twenty years of history, which needs a data
+source this repo does not ship.
+
+## One command (synthetic, no network)
 
 ```bash
 pip install -r requirements.txt

@@ -6,8 +6,15 @@
 # what the edge has to beat, and taker fees are still the binding constraint here:
 # check the smoothing rows of the sweep, not just the headline Sharpe.
 #
+# BEFORE YOU RUN THIS, know what the arithmetic already says (analysis/feasibility.py):
+# at a plausible IC of 0.03 this setup reaches Sharpe ~0.29 and needs ~40 years of data to
+# distinguish that from luck. Binance perps offer about 4. So expect the power criterion to
+# fail even if the edge is real. Run it for the measurement, not for a verdict.
+# Maker fees would cut the requirement to ~7 years, which is the single biggest improvement
+# available here, but maker fills cannot be backtested from these bars (see SETUP.md s6).
+#
 # Symbols must be reconstructed as the universe stood at each point in time. This fixed
-# list is survivorship-biased and is a starting point, not a research universe.
+# list is survivorship-biased: every name on it is one that survived to today.
 name: xs_crypto_1d_timesfm25
 data:
   source: binance
@@ -39,6 +46,37 @@ cross_section:
     - ARBUSDT
     - OPUSDT
     - INJUSDT
+    - AAVEUSDT
+    - UNIUSDT
+    - SUSHIUSDT
+    - CRVUSDT
+    - MKRUSDT
+    - SNXUSDT
+    - COMPUSDT
+    - GRTUSDT
+    - SANDUSDT
+    - MANAUSDT
+    - AXSUSDT
+    - GALAUSDT
+    - CHZUSDT
+    - ENJUSDT
+    - ONEUSDT
+    - ALGOUSDT
+    - VETUSDT
+    - ICPUSDT
+    - THETAUSDT
+    - EOSUSDT
+    - XLMUSDT
+    - TRXUSDT
+    - XTZUSDT
+    - ZILUSDT
+    - IOTAUSDT
+    - NEOUSDT
+    - QTUMUSDT
+    - OMGUSDT
+    - ZECUSDT
+    - DASHUSDT
+
 forecast:
   forecaster: timesfm
   model_id: google/timesfm-2.5-200m-pytorch
@@ -52,7 +90,7 @@ walkforward:
   n_splits: 6
   embargo_bars: 5
   min_train_bars: 400
-  max_test_points: 120      # per fold; x 20 assets = 2400 TimesFM calls per fold
+  max_test_points: null     # daily bars are scarce; do not throw any away
 costs:
   commission_bps: 5.0
   half_spread_bps: 0.5

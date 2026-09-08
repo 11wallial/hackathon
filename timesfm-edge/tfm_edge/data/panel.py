@@ -96,18 +96,27 @@ def generate_panel(n_bars: int, n_assets: int, bar: str = "1d", seed: int = 0,
 
 
 def panel_from_frames(frames: dict[str, pd.DataFrame], bar: str) -> Panel:
-    """Align validated bar frames on their shared timestamps. Assets are dropped if they
-    do not cover the full intersection; a panel with ragged history silently changes its
-    own cross-section over time, which looks exactly like alpha."""
+    """Align validated bar frames on the timestamps every asset shares.
+
+    Bars outside the intersection are dropped rather than filled: a panel whose
+    cross-section silently changes size over time looks exactly like alpha, because the
+    names that drop out are the ones that stopped trading.
+
+    Timestamps come back tz-naive UTC to match the synthetic generator. Frames carry
+    tz-aware timestamps, whose .to_numpy() is an object array of Timestamps, so the
+    conversion has to be explicit or every later datetime arithmetic fails.
+    """
     idx = None
     for df in frames.values():
-        s = set(df["open_time"].to_numpy())
-        idx = s if idx is None else (idx & s)
-    times = np.array(sorted(idx))
-    if len(times) < 100:
-        raise ValueError(f"only {len(times)} shared bars across {len(frames)} assets")
+        i = pd.DatetimeIndex(df["open_time"])
+        idx = i if idx is None else idx.intersection(i)
+    idx = idx.sort_values()
+    if len(idx) < 100:
+        raise ValueError(f"only {len(idx)} shared bars across {len(frames)} assets")
     syms = sorted(frames)
-    lc = np.column_stack([np.log(frames[s].set_index("open_time").loc[times, "close"].to_numpy()) for s in syms])
-    lo = np.column_stack([np.log(frames[s].set_index("open_time").loc[times, "open"].to_numpy()) for s in syms])
+    lc = np.column_stack([np.log(frames[s].set_index("open_time").loc[idx, "close"].to_numpy(float)) for s in syms])
+    lo = np.column_stack([np.log(frames[s].set_index("open_time").loc[idx, "open"].to_numpy(float)) for s in syms])
+    naive = idx.tz_convert("UTC").tz_localize(None) if idx.tz is not None else idx
+    times = naive.to_numpy(dtype="datetime64[ns]")
     return Panel(open_time=times, close_time=times + bar_timedelta(bar).to_timedelta64(),
                  log_close=lc, log_open=lo, symbols=syms, bar=bar)
