@@ -21,15 +21,24 @@ fail=0
 for url in https://stooq.com/q/d/l/?s=aapl.us\&i=d \
            https://fapi.binance.com/fapi/v1/ping \
            https://huggingface.co/api/models/google/timesfm-2.5-200m-pytorch; do
-  code=$(curl -sS -m 25 -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || echo 000)
+  code=$(curl -sS -m 25 -o /dev/null -w '%{http_code}' "$url" 2>/dev/null) || true
+  code=${code:-000}
   if [[ "$code" == "200" ]]; then printf '  ok    %s\n' "$url"
   else printf '  FAIL  %s  (HTTP %s)\n' "$url" "$code"; fail=1; fi
 done
 if [[ $fail -eq 1 ]]; then
-  die "One or more hosts are unreachable.
-  A 000 means the connection was refused or blocked, usually a proxy or firewall, not a
-  bad URL. Binance blocks some regions outright; a VPN or a different host fixes that.
-  Nothing below can run without both, so this stops here rather than half-running."
+  die "One or more hosts above are unreachable, so this stops here rather than half-running.
+
+  000 means the connection never completed: a proxy, firewall or DNS block, not a bad URL.
+  A real HTTP code (403, 451, 404) means you reached the host and it turned you away.
+
+  Common causes, in order:
+    - a corporate or sandbox egress policy that only allows an approved list of hosts
+    - Binance blocks some countries outright; a different host or region fixes that
+    - Stooq rate-limits heavy use; wait a few minutes and retry
+  You do not need all three. To run only what you can reach:
+    equity only:  ./run_real_data.sh --skip-install && python -m tfm_edge.analysis.panel_run --config $EQUITY_CFG
+    no network:   ./run_phase1.sh          (synthetic self-tests and the feasibility survey)"
 fi
 
 if [[ $SKIP_INSTALL -eq 0 ]]; then
