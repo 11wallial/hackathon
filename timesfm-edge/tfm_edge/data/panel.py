@@ -27,6 +27,12 @@ class Panel:
     log_open: np.ndarray         # (n_bars, n_assets)
     symbols: list[str]
     bar: str
+    # (n_bars, n_assets) bool: was this name a tradable member of the universe at this
+    # bar? None means "always, everywhere", which is only honest for a universe that
+    # genuinely never changed. For equities it never is: names list, delist, get
+    # acquired and drop out of the index, and a panel that ignores that is a list of
+    # survivors, which is the single largest source of fake alpha in equity research.
+    mask: np.ndarray | None = None
 
     @property
     def n_bars(self) -> int:
@@ -36,11 +42,35 @@ class Panel:
     def n_assets(self) -> int:
         return self.log_close.shape[1]
 
+    def membership(self) -> np.ndarray:
+        if self.mask is None:
+            return np.isfinite(self.log_close)
+        return self.mask & np.isfinite(self.log_close)
+
     def returns(self) -> np.ndarray:
-        """(n_bars, n_assets) one-bar log returns; row 0 is NaN."""
-        r = np.full_like(self.log_close, np.nan)
+        """(n_bars, n_assets) one-bar log returns, NaN wherever the return is not both
+        knowable and tradable: the first bar, and any bar whose previous bar was outside
+        this name's membership."""
+        r = np.full(self.log_close.shape, np.nan)
         r[1:] = np.diff(self.log_close, axis=0)
-        return r
+        m = self.membership()
+        valid = np.zeros_like(m)
+        valid[1:] = m[1:] & m[:-1]
+        return np.where(valid, r, np.nan)
+
+    def survivorship_report(self) -> dict:
+        """How much does this panel's cross-section change over time? A universe that is
+        identical on the first and last bar is a list of survivors."""
+        m = self.membership()
+        first, last = m[0].sum(), m[-1].sum()
+        return {
+            "n_assets": self.n_assets,
+            "members_first_bar": int(first),
+            "members_last_bar": int(last),
+            "members_every_bar": int(m.all(axis=0).sum()),
+            "mean_members": float(m.sum(axis=1).mean()),
+            "static_universe": bool(m.all()),
+        }
 
 
 def _garch_path(n: int, rng: np.random.Generator, base_sigma: float,

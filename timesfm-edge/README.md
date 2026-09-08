@@ -43,22 +43,39 @@ Apache-2.0. The default config uses 2.5 for that reason.
 ## Running on real market data
 
 ```bash
-./run_real_data.sh        # preflight, install, feasibility, self-tests, then the real run
+./run_real_data.sh        # preflight, install, feasibility, self-tests, then the real runs
 ```
 
-Needs open access to `fapi.binance.com` (bars) and `huggingface.co` (weights); the script
-checks both first and stops with a clear message rather than half-running. Roughly 1-3
-hours on a 4-core CPU, nearly all of it TimesFM inference. Forecasts are cached by
-content, so an interrupted run resumes for free by re-running the same command.
+Needs open access to `stooq.com` (equity bars), `fapi.binance.com` (crypto bars) and
+`huggingface.co` (weights). The script checks all three first and stops with a clear
+message rather than half-running. Roughly 2-4 hours on a 4-core CPU, nearly all of it
+TimesFM inference; forecasts are cached by content, so an interrupted run resumes for
+free by re-running the same command.
 
-**What the arithmetic already says about this run, before it happens.** At a plausible
-IC of 0.03, a 50-name daily crypto book at taker fees reaches Sharpe ~0.29 and needs
-about 40 years of history to tell that apart from luck. Binance perpetuals offer about
-four. So expect the power criterion to fail even if the edge is real: the honest verdict
-will likely be `STOP` or `PROCEED_UNDERPOWERED`. Run it for the measurement, not for a
-verdict. The only setup in the survey that clears both the cost hurdle and the power
-requirement is a US equity cross-section with twenty years of history, which needs a data
-source this repo does not ship.
+**Two setups run, and the arithmetic already says what to expect from each.**
+
+| | cost hurdle | history available | history needed at IC 0.03 | expect |
+|---|---|---|---|---|
+| **US equity, 70 names** | k = 0.009, break-even **0.505** | 20 years | 16.7 years | a real verdict |
+| Crypto perps, 50 names | k = 0.052, break-even 0.533 | 4 years | 45.9 years | `PROCEED_UNDERPOWERED` |
+
+Equity is the only configuration in the survey that clears the cost hurdle *and* has
+enough history to distinguish the result from luck. Crypto is run anyway for the
+measurement, but four years cannot prove a plausible edge at any cost level, so read its
+verdict as a reading rather than an answer.
+
+### Survivorship, which is the thing most likely to fake a result
+
+A list of today's index members run backwards twenty years is a list of companies that
+survived, and their past returns are conditioned on that. The panel supports
+point-in-time membership: point `cross_section.universe_path` at a CSV of
+`symbol,start_date,end_date` (format and sources in `data/universe_TEMPLATE.csv`) and
+names are only held while they were actually members. Without one the run still works,
+the report says so in bold, and every positive number should be read as an upper bound.
+
+Corporate actions are handled too: both loaders return split- and dividend-adjusted
+prices, and a series still containing a raw split is refused outright rather than
+silently booked as a -50% return.
 
 ## One command (synthetic, no network)
 

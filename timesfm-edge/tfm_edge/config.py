@@ -49,6 +49,7 @@ class DataConfig:
     synthetic_n: int = 20000
     synthetic_seed: int = 0
     synthetic_phi: float = 0.0       # AR(1) coefficient for kind=ar1
+    equity_source: str = "stooq"     # stooq | yahoo, both keyless; used when source=equity
     cache_dir: str = "cache/data"
 
 
@@ -78,6 +79,10 @@ class CrossSectionConfig:
     top_fraction: float = 0.2             # long the top 20%, short the bottom 20%
     gross: float = 1.0                    # total absolute exposure
     synthetic_phi_idio: float = 0.0       # planted idiosyncratic AR(1) for the self-tests
+    # CSV of symbol,start_date,end_date giving index membership through time. Without it
+    # an equity panel is a list of survivors and the report says so.
+    universe_path: str | None = None
+    min_names_per_bar: int = 10
 
 
 @dataclass(frozen=True)

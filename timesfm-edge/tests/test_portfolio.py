@@ -101,3 +101,15 @@ def test_probabilistic_sharpe_is_a_probability():
     rng = np.random.default_rng(4)
     p = probabilistic_sharpe(rng.standard_normal(1000) * 0.01 + 0.001)
     assert 0.0 <= p <= 1.0
+
+
+def test_annualisation_follows_decision_frequency_not_bar_frequency():
+    """Subsampling to weekly decisions on daily bars must annualise by ~52, not 252.
+    Getting this wrong inflates every reported Sharpe by sqrt(5)."""
+    import pandas as pd
+    from tfm_edge.analysis.panel_run import decisions_per_year
+    daily = pd.bdate_range("2015-01-01", periods=2520).to_numpy()
+    assert 250 < decisions_per_year(daily) < 265
+    assert 50 < decisions_per_year(daily[::5]) < 54
+    hourly = pd.date_range("2022-01-01", periods=8760, freq="1h").to_numpy()
+    assert 8700 < decisions_per_year(hourly) < 8800

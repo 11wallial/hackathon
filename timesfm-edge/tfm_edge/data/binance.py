@@ -29,7 +29,7 @@ def fetch_klines(symbol: str, bar: str, years: float, market: str = "um",
     url = _BASE[market]
     sess = session or requests.Session()
     td = bar_timedelta(bar)
-    end = pd.Timestamp.utcnow().floor(td)
+    end = pd.Timestamp.now("UTC").floor(td)
     start = end - pd.Timedelta(days=365.25 * years)
     rows: list[list] = []
     cur = int(start.timestamp() * 1000)

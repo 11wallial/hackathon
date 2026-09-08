@@ -44,15 +44,42 @@ from .report import save_json
 from .walkforward import make_folds_from_index
 
 
+# A name needs at least this much of its own history before it is worth forecasting.
+# Below it the baselines are fitting noise and TimesFM is extrapolating a stub.
+MIN_CONTEXT = 64
+
+
 def bars_per_year(bar: str) -> float:
     return float(np.timedelta64(365, "D") / bar_timedelta(bar).to_timedelta64())
 
 
-def load_panel(cfg: RunConfig) -> Panel:
+def decisions_per_year(decision_times: np.ndarray) -> float:
+    """Annualisation factor derived from the decision timestamps themselves.
+
+    Using the BAR frequency here would be wrong whenever decisions are not taken on
+    every bar: subsampling to roughly weekly decisions on daily bars and then
+    annualising by 252 inflates the Sharpe by sqrt(5). It is also wrong for equities,
+    where 252 trading days span a 365-day year. Deriving it from the actual span is
+    correct in every case and needs no configuration."""
+    t = np.sort(np.asarray(decision_times, dtype="datetime64[ns]"))
+    if len(t) < 3:
+        return 1.0
+    span_years = (t[-1] - t[0]) / np.timedelta64(365, "D")
+    return float(len(t) / span_years) if span_years > 0 else 1.0
+
+
+def load_panel(cfg: RunConfig, log=print) -> Panel:
     xs, d = cfg.cross_section, cfg.data
     if d.source == "synthetic":
         return generate_panel(d.synthetic_n, xs.n_assets, bar=d.bar, seed=d.synthetic_seed,
                               phi_idio=xs.synthetic_phi_idio)
+    if d.source == "equity":
+        from ..data.equity import equity_panel
+        if not xs.symbols:
+            raise ValueError("cross_section.symbols required for an equity panel")
+        return equity_panel(xs.symbols, source=d.equity_source, years=d.years,
+                            cache_dir=d.cache_dir, universe_path=xs.universe_path,
+                            min_names_per_bar=xs.min_names_per_bar, log=log)
     if d.source == "binance":
         from ..data.binance import fetch_klines
         if not xs.symbols:
@@ -78,11 +105,21 @@ def forecast_panel(name, fc, panel: Panel, samples, folds, cfg: RunConfig, log) 
         train = np.diff(series[:fold.train_return_end], axis=0).ravel(order="F")
         fc.fit(train[np.isfinite(train)])
         times = samples.t[fold.test_sample_idx]
+        member = panel.membership()
         windows, slots = [], []
         for row, t in zip(fold.test_sample_idx, times):
             for a in range(panel.n_assets):
-                windows.append(series[max(0, t - C + 1):t + 1, a])
+                if not member[t, a]:
+                    continue          # not in the universe at this bar: no forecast, no position
+                w = series[max(0, t - C + 1):t + 1, a]
+                w = w[np.isfinite(w)]  # drop bars before this name entered, or while it was out
+                if len(w) < MIN_CONTEXT:
+                    continue
+                windows.append(w)
                 slots.append((row, a))
+        if not windows:
+            log(f"  [{name}] fold {fold.k}: no forecastable names, skipped")
+            continue
         d = fc.predict(windows, H).sorted()
         for (row, a), p in zip(slots, d.point):
             pred[row, a] = p
@@ -171,7 +208,7 @@ def evaluate_book(scores, y, cfg: RunConfig, bpy: float, fold_of, n_prior_trials
 def run(cfg: RunConfig, log=print) -> dict:
     t_start = time.time()
     log(f"== Cross-sectional Phase 1: {cfg.name} (variant {cfg.variant_hash()})")
-    panel = load_panel(cfg)
+    panel = load_panel(cfg, log)
     log(f"  panel: {panel.n_bars} bars x {panel.n_assets} assets, {cfg.data.bar}, residualise={cfg.cross_section.residualise}")
     samples = build_panel_samples(panel, cfg.forecast.horizon, cfg.forecast.context_len)
     folds = make_folds_from_index(samples.t, samples.horizon, cfg.walkforward)
@@ -182,10 +219,12 @@ def run(cfg: RunConfig, log=print) -> dict:
     n_prior = ledger.record(cfg.variant_hash(), cfg.variant_key())
     log(f"  ledger: variant #{n_prior}")
 
-    bpy = bars_per_year(cfg.data.bar)
     rets = panel.returns()
     rows = np.concatenate([f.test_sample_idx for f in folds])
     fold_of = np.concatenate([np.full(len(f.test_sample_idx), f.k) for f in folds])
+    bpy = decisions_per_year(samples.decision_at[rows])
+    log(f"  {len(rows)} decision points spanning "
+        f"{len(rows)/bpy:.1f} years -> annualising by {bpy:.1f} per year")
 
     # neutralise the realised target with each fold's own betas, so nothing forward-looking
     y = np.full(samples.y_oo.shape, np.nan)
@@ -225,7 +264,9 @@ def run(cfg: RunConfig, log=print) -> dict:
         "name": cfg.name, "mode": "cross_sectional",
         "generated_at": datetime.now(timezone.utc).isoformat(), "variant_hash": cfg.variant_hash(),
         "config": cfg.to_dict(), "n_assets": panel.n_assets, "n_bars": panel.n_bars,
+        "survivorship": panel.survivorship_report(),
         "n_test_bars": int(len(rows)), "bars_per_year": bpy,
+        "decisions_per_year": bpy,
         "round_trip_bps": cfg.costs.round_trip_bps(), "ledger_count": n_prior,
         "candidate": candidate, "baselines": baselines,
         "gate": dataclasses.asdict(verdict), "runtime_s": time.time() - t_start,
@@ -241,6 +282,19 @@ def run(cfg: RunConfig, log=print) -> dict:
     return res
 
 
+def _survivorship_line(res: dict) -> str:
+    s = res.get("survivorship")
+    if not s:
+        return ""
+    if s["static_universe"]:
+        return ("- **Universe: static.** Every name is present on every bar, so every name "
+                "survived the whole sample. Returns here are conditioned on survival and any "
+                "positive result is an upper bound. Supply `cross_section.universe_path` to fix.")
+    return (f"- Universe: point-in-time, {s['members_first_bar']} names at the start, "
+            f"{s['members_last_bar']} at the end, {s['mean_members']:.0f} on average, "
+            f"{s['members_every_bar']} present throughout")
+
+
 def write_panel_report(res: dict, path: Path) -> None:
     c, g = res["candidate"], res["gate"]
     L = [f"# Cross-sectional Phase 1: {res['name']}\n",
@@ -251,6 +305,7 @@ def write_panel_report(res: dict, path: Path) -> None:
           f"- Panel: {res['n_assets']} assets x {res['n_bars']} {res['config']['data']['bar']} bars, "
           f"{res['n_test_bars']} out-of-sample bars ({c['years_of_data']:.1f} years)",
           f"- Residualisation: `{res['config']['cross_section']['residualise']}`; dollar-neutral, gross {res['config']['cross_section']['gross']}",
+          _survivorship_line(res),
           f"- Round-trip cost {res['round_trip_bps']:.1f} bps, charged on realised turnover",
           f"- Ledger variants: {res['ledger_count']}", "",
           "## Result\n",

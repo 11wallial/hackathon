@@ -10,13 +10,17 @@ set -euo pipefail
 cd "$(dirname "$0")"
 SKIP_INSTALL=0
 [[ "${1:-}" == "--skip-install" ]] && SKIP_INSTALL=1
+EQUITY_CFG=config/xs_equity_1d_timesfm25.yaml
+CRYPTO_CFG=config/xs_crypto_1d_timesfm25.yaml
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 die() { printf '\n\033[31mSTOP: %s\033[0m\n' "$*" >&2; exit 1; }
 
 say "0/5  Preflight: can this machine actually reach the data and the weights?"
 fail=0
-for url in https://fapi.binance.com/fapi/v1/ping https://huggingface.co/api/models/google/timesfm-2.5-200m-pytorch; do
+for url in https://stooq.com/q/d/l/?s=aapl.us\&i=d \
+           https://fapi.binance.com/fapi/v1/ping \
+           https://huggingface.co/api/models/google/timesfm-2.5-200m-pytorch; do
   code=$(curl -sS -m 25 -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || echo 000)
   if [[ "$code" == "200" ]]; then printf '  ok    %s\n' "$url"
   else printf '  FAIL  %s  (HTTP %s)\n' "$url" "$code"; fail=1; fi
@@ -53,13 +57,26 @@ echo "  If the null run above said anything other than STOP, do not read step 5.
 
 say "4/5  Baselines on real bars (no TimesFM, minutes not hours)"
 echo "  This is the number TimesFM has to beat. If last_sign wins, TimesFM found nothing new."
-python -m tfm_edge.analysis.panel_run --config config/xs_crypto_1d_timesfm25.yaml --forecaster ar1
-python -m tfm_edge.analysis.panel_run --config config/xs_crypto_1d_timesfm25.yaml --forecaster last_sign
+for f in ar1 last_sign; do
+  python -m tfm_edge.analysis.panel_run --config "$EQUITY_CFG" --forecaster $f
+  python -m tfm_edge.analysis.panel_run --config "$CRYPTO_CFG" --forecaster $f
+done
 
 say "5/5  TimesFM on real bars (the long one)"
-python -m tfm_edge.analysis.panel_run --config config/xs_crypto_1d_timesfm25.yaml
+echo "  Equity first: it is the only setup with enough history to prove anything."
+python -m tfm_edge.analysis.panel_run --config "$EQUITY_CFG"
+python -m tfm_edge.analysis.panel_run --config "$CRYPTO_CFG"
 
 say "Done. Reports in reports/"
-echo "  Read in this order: the verdict line, the per-fold Sharpes, then the baseline rows."
-echo "  A verdict of PROCEED_UNDERPOWERED means the result may be real but this much data"
-echo "  cannot prove it. That is an honest outcome, not a failure to tune."
+cat <<'NOTE'
+  Read each report in this order:
+    1. the verdict line
+    2. the survivorship line  (a static universe means the result is an upper bound)
+    3. the per-fold Sharpes    (all the profit in one fold is a regime, not an edge)
+    4. the baseline rows       (if last_sign wins, TimesFM added nothing)
+
+  PROCEED_UNDERPOWERED means the result may well be real but this much data cannot
+  prove it. That is an honest outcome, not a failure to tune. Expect it on crypto:
+  four years is not enough at any plausible edge, which the feasibility table in step 2
+  said before any of this ran.
+NOTE

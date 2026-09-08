@@ -62,8 +62,8 @@ def patched(server, monkeypatch, tmp_path):
     monkeypatch.setitem(bn._BASE, "um", server)
     monkeypatch.setattr(bn.time, "sleep", lambda *_: None)
     # the stand-in's bars end well before "now"; ask for a window that covers them all
-    monkeypatch.setattr(bn.pd.Timestamp, "utcnow",
-                        staticmethod(lambda: pd.Timestamp(START_MS + 2500 * BAR_MS, unit="ms", tz="UTC")))
+    monkeypatch.setattr(bn.pd.Timestamp, "now",
+                        staticmethod(lambda *a, **k: pd.Timestamp(START_MS + 2500 * BAR_MS, unit="ms", tz="UTC")))
     return str(tmp_path)
 
 

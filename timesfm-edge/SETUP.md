@@ -265,6 +265,28 @@ The levers above are arithmetic and they are sound. The risks have moved, not va
 
 ---
 
+## 6b. What the real-data configs are, and what they can prove
+
+Costs and history together decide whether a run can produce an answer at all, so both
+were checked before spending any inference.
+
+| setup | k | break-even | Sharpe at IC 0.03 | years needed | years available | verdict possible? |
+|---|---|---|---|---|---|---|
+| US equity xs, 70 names, weekly decisions | 0.009 | 0.505 | 0.53 | 16.7 | 20 | **yes** |
+| US equity xs, 70 names, daily decisions | 0.019 | 0.512 | 0.83 | 9.9 | 20 | **yes** |
+| Crypto perp xs, 50 names, daily, taker | 0.052 | 0.533 | 0.27 | 45.9 | 4 | no |
+| Crypto perp xs, 50 names, daily, maker | 0.014 | 0.509 | 1.28 | 7.1 | 4 | no |
+| BTC perp, 1h, taker (where this started) | 0.379 | 0.738 | -0.19 | never | 4 | no |
+
+Two things worth stating plainly. First, no crypto configuration can prove a plausible
+edge, because Binance perpetuals have only existed for about four years and even the
+maker-fee case needs seven. That is a data-availability limit, not a modelling one, and
+no amount of tuning fixes it. Second, daily equity decisions beat weekly (0.83 against
+0.53) because equity costs are low enough that the extra breadth outweighs the extra
+turnover; the shipped config subsamples to weekly purely to cut CPU inference from days
+to hours, and that compromise costs real statistical power. On a GPU, set
+`max_test_points: null`.
+
 ## 7. Bottom line
 
 The original question was "is TimesFM good enough to trade hourly BTC?" The answer is no,

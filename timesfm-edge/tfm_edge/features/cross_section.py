@@ -58,16 +58,36 @@ def build_panel_samples(panel: Panel, horizon: int, context_len: int) -> PanelSa
     )
 
 
-def estimate_betas(returns: np.ndarray, end: int) -> np.ndarray:
-    """OLS beta of each asset on the equal-weighted cross-sectional mean, using bars
-    [1, end) only. Returns (n_assets,)."""
+def market_return(returns: np.ndarray) -> np.ndarray:
+    """Equal-weighted mean across whoever is present at each bar. Names outside the
+    universe carry NaN and are simply absent from that bar's average."""
+    finite = np.isfinite(returns)
+    n = finite.sum(axis=1)
+    total = np.where(finite, returns, 0.0).sum(axis=1)
+    return np.divide(total, n, out=np.zeros(len(returns)), where=n > 0)
+
+
+def estimate_betas(returns: np.ndarray, end: int, min_obs: int = 60) -> np.ndarray:
+    """OLS beta of each asset on the equal-weighted market, using bars [1, end) only.
+
+    Fitted per asset over the bars where that asset was present, so a name with three
+    years of history is not penalised for the years before it listed. Names with too
+    little overlap fall back to 1.0 rather than to a beta estimated from noise."""
     r = returns[1:end]
-    mkt = np.nanmean(r, axis=1)
-    var = np.nanvar(mkt)
-    if var <= 0:
-        return np.ones(r.shape[1])
-    cov = np.nanmean((r - np.nanmean(r, axis=0)) * (mkt - mkt.mean())[:, None], axis=0)
-    return np.clip(cov / var, 0.0, 3.0)
+    if r.size == 0:
+        return np.ones(returns.shape[1])
+    mkt = market_return(r)
+    out = np.ones(r.shape[1])
+    for i in range(r.shape[1]):
+        ok = np.isfinite(r[:, i])
+        if ok.sum() < min_obs:
+            continue
+        x, y = mkt[ok], r[ok, i]
+        var = x.var()
+        if var <= 0:
+            continue
+        out[i] = np.clip(np.cov(x, y, bias=True)[0, 1] / var, 0.0, 3.0)
+    return out
 
 
 def residual_log_close(panel: Panel, betas: np.ndarray, mode: str = "beta") -> np.ndarray:
@@ -82,19 +102,22 @@ def residual_log_close(panel: Panel, betas: np.ndarray, mode: str = "beta") -> n
     to the market rather than the market's.
     """
     if mode == "none":
-        return panel.log_close
+        return np.where(panel.membership(), panel.log_close, np.nan)
     r = panel.returns()
-    r0 = np.nan_to_num(r, nan=0.0)
-    mkt = np.nanmean(r0, axis=1)
-    resid = r0 - (mkt[:, None] * (betas[None, :] if mode == "beta" else 1.0))
-    return np.cumsum(resid, axis=0)
+    mkt = market_return(r)
+    resid = np.nan_to_num(r, nan=0.0) - mkt[:, None] * (betas[None, :] if mode == "beta" else 1.0)
+    # Non-member bars contribute zero so the level stays continuous across a gap, then
+    # are blanked out: the forecaster must never see a flat-lined stretch where a name
+    # was not trading, and never gets a window from before it entered the universe.
+    series = np.cumsum(np.where(np.isfinite(r) | (np.arange(len(r))[:, None] == 0), resid, 0.0), axis=0)
+    return np.where(panel.membership(), series, np.nan)
 
 
 def neutralise_targets(y: np.ndarray, betas: np.ndarray, mode: str = "beta") -> np.ndarray:
     """Remove the market component from the realised target the same way."""
     if mode == "none":
         return y
-    mkt = np.nanmean(y, axis=1)
+    mkt = market_return(y)
     return y - mkt[:, None] * (betas[None, :] if mode == "beta" else 1.0)
 
 
