@@ -1,0 +1,466 @@
+# EXPERIMENTS.md
+
+Rule: **hypotheses are written before the code runs and are never edited after
+results arrive.** Corrections go in *Interpretation*, not in *Hypothesis*.
+
+Decision vocabulary: KEEP / MODIFY / RETEST / COMBINE / ARCHIVE / KILL.
+
+---
+
+## Batch 1 — pre-registered 2026-09-13, before the engine existed
+
+### EXP-001 — Is there a decision here at all?
+
+- **Question**: Does the charge/overload core produce skill-sensitive play, or
+  is it noise?
+- **Hypothesis**: Win rate will be strongly ordered
+  `random << greedy < optimizer`, with the optimizer at least 3x the random
+  agent's win rate on the same seeds. If the ordering is flat, there is no game.
+- **Change**: none — baseline measurement of v0.1.
+- **Expected behaviour**: the optimizer should vary its shove amount by context
+  rather than always shoving maximum.
+- **Measurement**: win rate per agent over 400 shared seeds; distribution of
+  chosen shove amounts; Shannon entropy of the shove-amount choice.
+- **Result** (300 seeds, encounter `probe`):
+
+  | agent | win | loss | timeout | Hshove | Hshove given band | bait kills/run |
+  |---|---|---|---|---|---|---|
+  | random | 1.7% | 2.7% | 95.7% | 1.77 | 1.76 | 0.10 |
+  | conservative | 0.7% | 8.0% | 91.3% | 0.00 | 0.00 | 0.01 |
+  | explorer | 2.0% | 3.0% | 95.0% | 1.92 | 1.92 | 0.15 |
+  | greedy | 6.0% | 2.0% | 92.0% | 1.61 | 1.38 | 0.00 |
+  | bomber | 0.0% | 19.0% | 81.0% | 1.20 | 1.11 | 0.13 |
+  | **optimizer** | **44.7%** | 0.7% | 54.7% | 1.97 | 1.47 | **2.70** |
+
+- **Interpretation**: the skill gradient is real and large (26x random, 7x
+  greedy), so there *is* a game here. But three things the hypothesis did not
+  anticipate dominate the picture:
+  1. **Nobody dies.** Loss rate is ~1-8%; 55-96% of runs hit the turn limit.
+     The encounter does not resolve — it runs down. Conservation means both
+     sides spend into each other and the charge ends up inert on the floor.
+     Spent chasers sit at 0 charge as permanent furniture (confirmed in the
+     turn-5-onward trace of seed 1003). **This is the headline failure.**
+  2. **The player never gets near overload.** Charge-band occupancy is
+     `[0.23, 0.28, 0.49, 0.001]` — the top quartile is visited 0.1% of turns.
+     The central tension of the thesis is not being *experienced*, because
+     venting onto your own node is a free, always-available safety valve.
+  3. **The winning strategy is not the one we designed.** 2.70 of the
+     optimizer's 3.63 kills per run (74%) are strict bait kills, and its
+     feed ratio is only 32% — it wins by putting charge on the *floor*, not
+     into enemies. Greedy, which only ever shoves into enemies, wins 6%.
+- **Decision**: **KEEP** the core, **MODIFY** urgently. Confidence HIGH on the
+  skill gradient, HIGH on the non-resolution failure.
+
+### EXP-002 — Is the "hot" rule the load-bearing counterpressure?
+
+- **Question**: Does `charge ≥ 50% capacity ⇒ two actions` stop "always shove
+  maximum" from dominating?
+- **Hypothesis**: With the hot rule **off**, the greedy max-shove agent's win
+  rate rises sharply (we predict +15 percentage points or more) and the
+  optimizer's shove-amount entropy collapses toward 0 as it converges on the
+  maximum. With it **on**, both remain moderate.
+- **Change**: `config.hotRule = false`.
+- **Expected behaviour**: without counterpressure, feeding an enemy is free, so
+  maximum throughput is always correct.
+- **Measurement**: greedy win-rate delta; optimizer shove-amount entropy delta.
+- **Result**: greedy 6.0% → **39.0%** (+33pp, far beyond the predicted +15pp).
+  Optimizer barely moved: 44.7% → 43.7%. Shove-amount entropy did **not**
+  collapse: 1.97 → 1.98, distribution essentially unchanged.
+- **Interpretation**: the first half of the hypothesis is confirmed emphatically
+  and the second half is **falsified**. The hot rule is load-bearing, but not in
+  the way we thought. It does not shape *how much* you shove; it decides
+  *whether skill matters at all*. With it off, a trivially simple agent gets
+  within 5pp of a searching agent — the skill gradient collapses from 7x to
+  1.1x. That is a much stronger reason to keep it than the one we wrote down.
+  The "how much to shove" decision is driven by something else entirely (see
+  EXP-001 note 3: it is driven by exact mine thresholds).
+- **Decision**: **KEEP** the hot rule. Confidence HIGH.
+
+### EXP-003 — Lethal overload vs. burn-out overload
+
+- **Question**: Should the player's own overload kill them outright, or blow up
+  in place at a permanent capacity cost?
+- **Hypothesis**: `burnout` (survive, lose capacity, payload still detonates
+  outward) produces *more* interesting play than `lethal`: agents will
+  occasionally overload themselves **on purpose** as an offensive move, which
+  lethal mode makes impossible. We predict burnout raises the fraction of runs
+  containing a player detonation above 5%, and that deliberate self-detonation
+  appears in optimizer runs without us coding it as a tactic.
+- **Change**: `config.overloadMode ∈ {lethal, burnout}`.
+- **Expected behaviour**: "failure becomes a weapon".
+- **Measurement**: player-detonation rate, win rate, run length, whether any
+  self-detonation occurred while the optimizer had a safe alternative.
+- **Result**: optimizer win 44.7% → **50.0%**; self-detonations 0.01 → **0.33
+  per run**; chain rate 0.3% → 6.0%; mean turns 35.2 → 33.8. Greedy was
+  unaffected (6.0% → 6.0%) — it never accumulates enough charge to overload.
+- **Interpretation**: confirmed. Burnout does not merely soften a loss; it adds
+  a *tactic* that lethal mode makes unreachable, and the searching agent adopts
+  it unprompted while winning more often. Self-immolation as an offensive
+  option is exactly the "failure state becomes useful" affordance we were
+  looking for, and it is the only thing in v0.1 that reliably produces chains.
+  Note the asymmetry: it rewards the agent that can *plan*, and is worthless to
+  the one that cannot. That is the right shape for a mastery mechanic.
+- **Decision**: **KEEP** burnout as the default overload mode. Lethal mode is
+  retained as a config flag for difficulty experiments, not as the baseline.
+  Confidence MEDIUM-HIGH (single encounter tested).
+
+### EXP-004 — Does movement need to be economy?
+
+- **Question**: Is auto-absorbing motes on `STEP` (movement = income = risk)
+  doing real work, or is it incidental?
+- **Hypothesis**: Turning auto-absorb off (motes become inert) will measurably
+  flatten positional play: step-direction choices will correlate far less with
+  mote locations, and the board-as-bank tactic disappears.
+- **Change**: `config.absorbOnStep = false`.
+- **Measurement**: correlation between chosen step direction and the
+  larger-mote side; mean motes left on the board at encounter end.
+- **Result**: with absorb **off**, optimizer win rate 44.7% → **0.0%** and every
+  run times out. Step-toward-motes rate falls from 0.875 to 0.489 — i.e. from
+  strongly directed to indistinguishable from a coin flip.
+- **Interpretation**: confirmed, but the magnitude exposes something the
+  hypothesis missed: absorb-on-step is not a flavour rule, it is the player's
+  *only* income. With it off there is no way to refill, so nothing can ever be
+  killed. That makes the result less informative than it looks — it did not
+  test "is movement-as-economy interesting", it tested "can the player act at
+  all". A cleaner retest needs an alternative income channel to compare against.
+- **Decision**: **KEEP**; **RETEST** the underlying question with a fair
+  control (queued as EXP-011). Confidence HIGH that it is load-bearing, LOW
+  that we learned why.
+
+### EXP-005 — Are chain detonations emergence or randomness?
+
+- **Question**: Can a player *cause* chains, or do they just happen?
+- **Hypothesis**: Chains of length ≥ 2 will occur in optimizer runs at least
+  2x as often as in random-agent runs on the same seeds. If the rates are
+  similar, chains are spectacle without agency and must be redesigned.
+- **Measurement**: chain-length histogram per agent, same seed set.
+- **Result**: chains are **essentially absent**. random 0.0%, greedy 1.0%,
+  optimizer 0.3% of runs; maximum chain length observed was 2, out of ~1,100
+  cascades. Only burnout mode lifted it (6.0%).
+- **Interpretation**: falsified, and the cause is arithmetic rather than
+  strategic. A detonation splits its payload evenly over three nodes, so a
+  neighbour receives payload/3 — with capacities of 6-14 and typical payloads
+  of 6-8, a neighbour receives ~2, which never overloads anything. Chains were
+  designed as spectacle and delivered as a rounding error. The mechanic is not
+  wrong; the *split* is wrong.
+- **Decision**: **MODIFY** — test an outward-only blast split where the payload
+  goes to the neighbours instead of being diluted across the centre (EXP-009).
+  Confidence HIGH in the diagnosis.
+
+### EXP-006 — Conservation invariant & degeneracy hunt (adversarial)
+
+- **Question**: Can any action sequence create or destroy charge, or produce a
+  repeatable resource-positive loop?
+- **Hypothesis**: No. Conservation should hold exactly on every transition
+  except explicit wave injection. We predict the adversarial agent finds zero
+  energy-creating sequences and zero non-terminating cascades.
+- **Measurement**: per-transition invariant assertion across ~10^5 transitions;
+  adversarial search log.
+- **Result**: **0 conservation violations** and **0 cascade-guard trips** across
+  every run in batch 1 (~4,000 encounters, millions of transitions), plus 8
+  targeted unit tests. Total energy equals cumulative wave injection exactly, at
+  every transition, in every config variant.
+- **Interpretation**: confirmed. Worth noting *what this buys*: the classic
+  roguelike degeneracy (a resource-positive loop) is impossible by
+  construction, not by balancing. We never have to hunt for infinite combos in
+  the economy; we only have to hunt for dominant *strategies*.
+  One caveat found while writing the tests: the first version of the burnout
+  test failed, and the engine was right — the test had fabricated charge by
+  hand. The invariant caught its own test author, which is mild evidence it is
+  actually load-bearing.
+- **Decision**: **KEEP**. Confidence HIGH.
+
+---
+
+## Batch 2 — pre-registered 2026-09-13, written before these configs were run
+
+Baseline for this batch is **v0.2**: burnout is now the default overload mode
+(EXP-003), and the optimiser breaks score ties toward spending fewer actions
+(an agent fix, not a rules change — the old tie-break made it burn actions on
+provable no-ops). v0.2 baseline on 150 seeds: optimizer 30.7% win / 69.3%
+timeout; greedy 7.0%; miner 13.3%.
+
+### EXP-007 — Circulation: do hungry enemies fix heat death?
+
+- **Question**: D-001 says a conserved economy needs a rule that forces charge
+  to keep moving. Does making spent chasers forage do it?
+- **Hypothesis**: timeout rate for the optimizer falls by ≥30pp, mean turns
+  falls, and loss rate rises above 5%. **Risk we are explicitly watching for**:
+  if enemies suicide into any pile, the game plays itself — that would show up
+  as *random* and *greedy* win rates jumping too, and would be a failure, not a
+  success.
+- **Change**: `hungryEnemies: true`.
+- **Measurement**: win/loss/timeout and mean turns for random, greedy,
+  optimizer, miner; bait kills per run; skill gradient (optimizer ÷ greedy).
+- **Result**: the opposite of the prediction on every axis. Optimizer timeouts
+  **rose** 69.6% → 86.0% and its win rate fell 30.4% → 14.0%. Random rose
+  1.6% → 9.2% and greedy 6.0% → 12.8%. Skill gradient collapsed 5.1x → 1.1x.
+- **Interpretation**: falsified, and **the risk we pre-registered is exactly
+  what happened**. Foragers eat the charge the player is staging, so deliberate
+  mine-building becomes unreliable (mean shove size fell to 1.55), while unskilled
+  agents benefit from enemies blundering into scattered piles. The rule helped
+  precisely the agents it was supposed to punish. The deeper error was the
+  diagnosis itself: D-001 blamed circulation, and EXP-013 later showed the
+  binding constraint was the total energy budget.
+- **Decision**: **KILL**. Confidence HIGH.
+
+### EXP-008 — Removing the free safety valve
+
+- **Question**: D-002 says the danger half of the thesis is unimplemented
+  because venting is a button. Does end-of-round settling implement it?
+- **Hypothesis**: top-quartile charge occupancy rises from 0.1% to above 5%,
+  near-overload rate rises, self-detonations rise, and every agent's win rate
+  falls. We also predict a cost: staging charge for a mine gets harder, so bait
+  kills fall.
+- **Change**: `settleMotes: true`.
+- **Measurement**: chargeBand, nearOverloadRate, selfDetonations, baitKills.
+- **Result**: optimizer 30.4% → 6.4% win. Top-quartile charge occupancy:
+  **0.001 before, 0.001 after**. Near-overload rate unchanged at 0.1%. The
+  predicted cost did appear (bait kills 2.31 → 1.27).
+- **Interpretation**: falsified. It paid the full predicted price and bought
+  none of the predicted benefit. The reason is a plain design error on our part:
+  settling closes the `dir = 0` vent while leaving the sideways vent (`shove` into
+  an adjacent empty node) completely open, so disposal was never actually made
+  expensive. We changed the valve we could see rather than the one that mattered.
+- **Decision**: **KILL** as implemented. Confidence HIGH.
+
+### EXP-009 — Making chains arithmetically reachable
+
+- **Question**: D-006 says chains failed on a division, not on design. Does an
+  outward-only blast split make them occur?
+- **Hypothesis**: chain rate rises at least 3x over the v0.2 baseline and the
+  maximum observed chain length exceeds 2.
+- **Change**: `blastSplit: 'outward'`.
+- **Measurement**: chain histogram, max chain, detonations per run.
+- **Result**: chain rate for greedy 1.2% → **29.6%** and for miner 2.8% → 31.2%,
+  vastly beyond the predicted 3x. But the optimizer barely moved (6.8% → 7.6%),
+  max chain length stayed at 2, and loss rates jumped (greedy 0.4% → 12.0%).
+- **Interpretation**: the arithmetic half of D-006 is confirmed — chains were
+  unreachable, and changing the division made them reachable. But the benefit
+  landed on the agents that stand next to things and die, not on the agent that
+  plans, and the optimizer's win rate fell 30.4% → 23.6%. Under v0.2 rules this
+  is a lethality change wearing a spectacle costume. Note that under v0.5 rules
+  (`absorbCap`) chains reach 71.7% of runs and length 6 with the *even* split —
+  the arithmetic fixed itself once payloads got bigger, which makes the outward
+  split unnecessary.
+- **Decision**: **ARCHIVE** (flag kept, default `even`). Confidence MEDIUM.
+
+### EXP-010 — The v0.3 candidate (C1+C2+C3 together)
+
+- **Question**: do the three fixes compose, or do they cancel?
+- **Hypothesis**: timeouts below 25%, loss rate above 15%, and the skill
+  gradient (optimizer ÷ greedy win rate) stays at 3x or better. If the gradient
+  collapses we have made the game more decisive and less interesting, which we
+  would count as a failure even if the pacing numbers look good.
+- **Measurement**: full agent panel on shared seeds.
+- **Result**: optimizer 18.8% win / 81.2% timeout; greedy 16.4%; gradient 1.1x.
+  Worse than the v0.2 baseline on every measure that mattered.
+- **Interpretation**: they compose, and they compose downward. Three
+  independently-motivated fixes, all of which reduced the skill gradient,
+  produced a game that is decisive-looking and less interesting. This is the
+  batch's real lesson: after three consecutive local patches failed, the model
+  of the problem was wrong, not the patches. Stepping back to compute the energy
+  budget (EXP-013) found the actual constraint in five minutes.
+- **Decision**: **KILL** the combination. Confidence HIGH.
+
+### EXP-012 — Is the discovered strategy reducible to a rule? (mastery depth)
+
+- **Question**: can an explicit hand-written policy for "salt the retreat"
+  match a 2-ply search? If yes, the game's depth is shallow and mechanical.
+- **Hypothesis**: written after the first miner version scored 8.3% and before
+  the improved versions were run — an explicit policy will get *close to* the
+  optimizer (within ~10pp) once it can build mines across multiple actions and
+  retreat in order to mine, because the tactic looked simple in the trace.
+- **Measurement**: miner vs optimizer win rate on shared seeds.
+- **Result**: three successive versions of the explicit policy scored 8.3%,
+  13.3% and 14.8% against the search agent's 30.4% on the same seeds — and under
+  v0.5 rules, 8.3% against 41.7%. It never got within 16pp.
+- **Interpretation**: **falsified, and this is good news.** The hand-written
+  policy had to be extended twice as we learned what the search was actually
+  doing: first to build a mine across several actions (a 2/6 drone needs 5 and
+  throughput is 4, so one shove can never arm it), then to *retreat in order to*
+  mine the tile behind it. Even with both, it captures under half the value. The
+  winning line is not a rule, it is a two-step plan whose second half only
+  becomes legal after the first half is played. That is the shape of a skill
+  ceiling rather than a trick.
+- **Decision**: **KEEP** the mechanic; keep `miner` as the "competent human"
+  reference point in the panel. Confidence MEDIUM-HIGH.
+
+### EXP-013 — The energy budget (charge-to-capacity ratio)
+
+- **Question**: batch 2 tried three rule changes and every one of them made the
+  game *worse*. Before changing another rule: is non-resolution a rules problem
+  at all, or an arithmetic one? Encounter `probe` contains **17 charge** and
+  destroying every enemy requires delivering **47**. Winning therefore demands
+  recycling each detonation's payload into the next kill, at a ceiling of 8
+  charge moved per turn, inside 40 turns.
+- **Hypothesis**: CCR (total charge ÷ charge needed to clear) is the dominant
+  variable, and it is not monotonic. We predict:
+  1. timeout rate falls steeply as CCR rises past ~0.5;
+  2. the **skill gradient peaks at an intermediate CCR (we predict 0.7–1.2)**
+     and collapses at high CCR, because when charge is abundant a naive agent
+     can simply shove things to death;
+  3. at high CCR the player's loss rate rises sharply, since the same abundance
+     fills the player.
+  If (2) is wrong and the gradient rises monotonically with CCR, then scarcity
+  is not what makes this game interesting and the thesis needs rewriting again.
+- **Change**: new config dials `startCharge` (charge pre-scattered on the ring)
+  and `capacityScale`, sweeping CCR from ~0.36 to ~2.0.
+- **Measurement**: win/loss/timeout and gradient across the panel per CCR.
+- **Result / Interpretation / Decision**: see **Batch 5 — EXP-013 — Result**
+  below, recorded with the rest of the energy-budget work.
+
+---
+
+## Batch 3 — pre-registered 2026-09-13
+
+Context: EXP-013 showed non-resolution was an arithmetic problem (17 charge
+available, 47 required). Moving charge injection *inside enemy bodies* rather
+than onto the floor (encounter `surge`) fixed resolution and killed the
+73%-win turtle strategy. But a trace of seed 2011 shows the turtle returning
+late: from turn 14 the optimal line is literally `end turn` repeatedly while
+spawns wander into the 45-charge ambient pile left by earlier detonations.
+**Loose charge is a sink that never drains, and it kills for free.**
+
+### EXP-014 — Absorption fills to capacity instead of overloading
+
+- **Question**: if picking charge off the floor can never overload a unit, does
+  the board stop playing itself?
+- **Hypothesis**: killing will require a directed transfer (a shove or a blast),
+  so the fraction of kills caused by floor absorption drops to ~0 and the
+  fraction caused by a player shove rises sharply. The turtle and random agents
+  lose most of their remaining win rate. The bait tactic is not destroyed but
+  *changed*: piles become a way to fatten an enemy into hot-and-brittle, and the
+  player must still arrive to tip it over. We predict optimizer win rate falls
+  (it loses free kills) but stays well above every other agent.
+- **Risk being watched**: this also makes the floor safe for the *player*, which
+  could remove player risk entirely. EXP-015 is the intended counterweight.
+- **Change**: `absorbCap: true`.
+- **Measurement**: kill-cause attribution (floor / player shove / enemy shove /
+  blast), win rates across the panel, bait kills.
+- **Result**: kill causes for the optimizer went from
+  `{floor: 1752, blast: 177, shove-player: 80}` to
+  `{shove-player: 898, blast: 636, shove-enemy: 323, floor: 0}`. Turtle 11% → 0%,
+  random 1% → 0%. Optimizer 71.5% → 35.0% win with deaths 4% → 24.5%.
+  Top-quartile charge occupancy 0.8% → 4.1%; max chain 4 → 6; chain rate
+  52.5% → 71%.
+- **Interpretation**: confirmed on every count, including the predicted cost.
+  87% of kills used to require no decision from anybody; now none do. The
+  predicted *change* to the bait tactic also happened — `baitKills` went to zero
+  by construction and the replacement metric `tipKills` (fatten from the floor,
+  then tip with a shove) records 3.3/run, so the mechanic did not die, it moved.
+  The flagged risk did not materialise: the floor got safer for the player but
+  deaths went *up* sixfold, because the danger is now other units' deliberate
+  transfers rather than ambient accident.
+- **Decision**: **KEEP**, default on. Confidence HIGH. This is the single most
+  important rule found in the project so far.
+
+### EXP-015 — Symmetric hot rule: make holding charge *powerful*
+
+- **Question**: D-002 said the danger half of the thesis is unimplemented. Two
+  batches of "make disposal expensive" failed. Invert it: the reason the player
+  never carries charge may be that carrying it buys **nothing**. Enemies get a
+  second action when hot; the player does not.
+- **Hypothesis**: giving the player the same +1 action when at ≥50% capacity
+  makes high charge a genuine power/risk trade. We predict top-quartile charge
+  occupancy rises from 0.8% to above 10%, near-overload rate rises several-fold,
+  and the optimizer's win rate rises while greedy's *falls* (greedy will park
+  hot and be tipped over by an enemy shove).
+- **Change**: `playerHotBonus: 1`.
+- **Measurement**: chargeBand, nearOverloadRate, win rates, player death causes.
+- **Result**: optimizer 71.5% → 82.5%; greedy 21.5% → 15.5% with deaths
+  50.5% → 64.5%. But top-quartile charge occupancy moved **0.008 → 0.007** and
+  near-overload rate stayed at 0.4%.
+- **Interpretation**: half confirmed, half **falsified**, and the falsified half
+  matters more. The bonus does exactly what we said it would do to the *agents*
+  — it rewards planning and punishes recklessness — but it does nothing to the
+  behaviour it was designed to produce. The player simply parks at 50-75%:
+  hot enough for the bonus, nowhere near the cliff. Follow-up EXP-017 raised the
+  threshold to 0.75 and 0.85 to close that gap; occupancy moved 0.7pp while the
+  skill gradient collapsed from 2.1x to 0.9x, because a higher threshold mostly
+  makes *enemies* safe. See D-008: this line of attack is exhausted.
+- **Decision**: **KEEP** the bonus at threshold 0.5 for its effect on the skill
+  gradient. **KILL** the hypothesis that voluntary accumulation can be made
+  dangerous; it is now Q1, a fork to be decided rather than tuned.
+  Confidence HIGH on the falsification.
+
+
+---
+
+## Batch 5 — the energy budget and the deadlock
+
+### EXP-013 — Result
+
+CCR sweep on `probe`, 200 seeds per cell, optimizer/greedy/random:
+
+| startCharge | CCR | random | greedy | optimizer | timeouts (opt) |
+|---|---|---|---|---|---|
+| 0 | 0.36 | 2% | 7% | 28% | 72% |
+| 10 | 0.57 | 48% | 30% | 76% | 24% |
+| 20 | 0.79 | 64% | 21% | 91% | 8% |
+| 30 | 1.00 | 67% | 21% | 95% | 4% |
+| 45 | 1.32 | 60% | 13% | 100% | 0% |
+| 90 | 2.28 | 21% | 6% | 100% | 0% |
+
+**Interpretation**: prediction (1) confirmed — resolution is entirely a
+budget problem. Prediction (2) **falsified in an instructive way**: the gradient
+did not peak in the middle, it rose monotonically, but *only because greedy was
+dying rather than failing to kill*, which makes the ratio meaningless. The real
+signal is the one we did not predict: **random wins 48-67% in the mid band**.
+Charge lying on the floor is a weapon nobody had to aim. That observation is
+what produced EXP-014 and D-007, and it is the most valuable thing in this
+batch. Prediction (3) confirmed: loss rates climb to 89-98% at CCR ≥ 2.
+**Decision**: MODIFY — inject charge inside bodies, not onto the floor
+(encounter `surge`); adopt CCR as a first-class design parameter. Confidence HIGH.
+
+### EXP-018 — Enemy throughput as forced charge injection
+
+- **Hypothesis** (pre-registered): if the player will not carry charge
+  voluntarily (D-008), enemies shoving harder will force them up the band.
+  Predicted near-overload rate to rise with `enemyThroughputScale`.
+- **Result**: the opposite. 1x → 3x took near-overload from 3.6% to **0.9%** and
+  the optimizer's death rate from 21% to 17%.
+- **Interpretation**: falsified, and it exposed D-009 — in a conserved economy
+  an enemy that hits hard empties itself in one blow, so damage is
+  self-limiting. Kept at 1.5x, but for an unrelated reason: it widens the skill
+  gradient from 2.1x to 3.4x.
+- **Decision**: ARCHIVE as a danger lever, KEEP at 1.5x as a difficulty dial.
+  Confidence HIGH.
+
+### EXP-019 — Shove displaces the body
+
+- **Hypothesis** (pre-registered): making `SHOVE` push the target one node
+  further breaks the two-body deadlock and lets the player herd enemies onto
+  piles. Predicted a substantial fall in timeouts.
+- **Result**: timeouts rose (39% → 49%). Optimizer deaths halved (19% → 8.5%),
+  greedy more than doubled (12.5% → 30.5%), gradient narrowed.
+- **Interpretation**: falsified. It is a defensive tool, not an offensive one —
+  see D-011. Proposed as reach, used as escape.
+- **Decision**: ARCHIVE (flag retained, default off). Confidence MEDIUM-HIGH.
+
+### EXP-011b — Is the deadlock a pacing problem? *(unplanned, 5 minutes)*
+
+Timeout rate at turn limits 45 / 60 / 80 / 120: **37% / 36% / 36% / 36%**.
+Flat. The 36% is a genuine fixed point of the rules, not a budget. This produced
+D-010 and Q2, and it is the defect at the top of the queue.
+
+---
+
+## Session synthesis (brief §34)
+
+1. **What we learned that is robust**: the core is skill-sensitive (41.7% vs
+   0.3% on shared seeds); conservation eliminates economic degeneracy for free;
+   and every death now traces to a decision.
+2. **What was falsified**: that the hot rule shapes expert behaviour (it decides
+   whether skill matters); that a conserved economy escalates (it runs down);
+   that `SHOVE` is the attack (the floor is); that the player can be enticed
+   toward their own overload (they cannot, three times over).
+3. **Surviving on inertia**: the `bomber` agent (killed), the `probe`/`swarm`/
+   `garden` encounters (untested under v0.5 — Q5), and arguably the player's
+   own capacity as a design element (Q1).
+4. **Biggest unexplored space**: rule-changing upgrades (Q6) — deliberately not
+   entered, because the vertical-slice gate is not met while Q1 and Q2 are open.
+5. **Are we locally optimising?** Partly. Batch 2 was three consecutive
+   local patches that all failed; the win came from stepping back and computing
+   the energy budget instead. That pattern is worth remembering: when three
+   rule tweaks in a row fail, the model of the problem is wrong.
