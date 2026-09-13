@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OVERLOAD — Genesis prototype v0.5</title>
+<meta name="description" content="A conserved-energy tactics prototype. Charge is your ammunition, your power and your death clock, and there is only ever so much of it." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%2358c8ff' stroke-width='3'/%3E%3Ccircle cx='16' cy='4' r='4' fill='%23ffb03a'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./web/style.css" />
+</head>
+<body>
+<div class="wrap">
+  <h1>Overload</h1>
+  <p class="sub">Charge is your ammunition, your power, and your death clock. There is only ever so much of it on the field &mdash; and the only way to hurt something is to give it yours.</p>
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="hud" id="hud"></div>
+        <svg id="ring" viewBox="0 0 460 460" role="img" aria-label="The ring"></svg>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <h2>What it takes</h2>
+        <div class="legend" id="threats"></div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <h2>Your turn</h2>
+        <div class="preview" id="preview">Pick an amount, then a direction.</div>
+        <div class="controls" id="encounters" style="margin-bottom:10px"></div>
+        <div class="controls" id="amounts"></div>
+        <div class="controls" id="actions"></div>
+        <div id="banner"></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel"><h2>What happened</h2><div class="log" id="log"></div></div>
+      <div class="panel" style="margin-top:14px">
+        <h2>Rules, in full</h2>
+        <div class="legend">
+          <p>A unit is destroyed when its charge goes <b>over</b> its capacity, not when it hits zero. Full is lethal; empty is merely helpless.</p>
+          <p><b>Charge is conserved.</b> Nothing is ever created or destroyed. Every point you spend ends up somewhere &mdash; in a body, or on the floor.</p>
+          <p><code>STEP</code> moves one node and picks up loose charge there, filling you to capacity and leaving the rest.</p>
+          <p><code>SHOVE</code> pushes charge into the next node. If something is standing there it absorbs it &mdash; and picking charge up can never overload anything, so <b>only a shove or a blast can kill</b>.</p>
+          <p>Any unit at half capacity or more runs <b>hot</b> and acts twice. That includes you.</p>
+          <p>A <b>lobber</b> throws charge at you from two to four nodes away and <b>cannot throw at range 1</b>, so walking into its face switches it off — if you can afford to. Nodes it can reach are ringed in red.</p>
+          <p>An enemy that has spent everything goes to the floor to <b>refill</b> rather than standing around — and it fills to capacity, which leaves it hot and one point from going over. If there is nothing left to pick up, it eventually <b>dissolves</b>: a thing holding nothing is nothing. So there are two ways to end something — give it more than it can hold, or let it spend itself to nothing.</p>
+          <p>Overloading does not end your run: you detonate where you stand, keep the blast, and lose capacity permanently.</p>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <h2>Keys</h2>
+        <div class="legend"><code>A</code>/<code>D</code> step &middot; <code>1</code>&ndash;<code>4</code> amount &middot; <code>Q</code>/<code>S</code>/<code>E</code> shove left / drop / right &middot; <code>Space</code> end turn &middot; <code>R</code> new run</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./web/app.js"></script>
+</body>
+</html>

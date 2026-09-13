@@ -89,3 +89,13 @@ No backend, no analytics, no network calls to any model. The training is local
 and private. The app teaches detection and defence only — consistent with the
 event's dual-use guardrails, it contains no instructions for installing secret
 loyalties or generating harmful data.
+
+---
+
+## Also in this repository: `genesis/`
+
+An unrelated, self-contained project — **OVERLOAD**, a conserved-energy tactics
+prototype built as an autonomous game-design experiment, together with its
+headless simulation harness and research notebook. It shares nothing with the
+trainer above except the repository and the Pages deployment; play it at
+`/genesis/` and read `genesis/README.md` for the details.

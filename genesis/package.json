@@ -1,0 +1,11 @@
+{
+  "name": "genesis-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Autonomous game-design laboratory. No dependencies, no build step: the same ES modules run headless in Node for experiments and unmodified in a browser for play.",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "exp": "node exp/batch1.js"
+  }
+}
