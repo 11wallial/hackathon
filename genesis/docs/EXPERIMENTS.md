@@ -1457,3 +1457,69 @@ construction, explicitly excluded from the gate.
 - **Decision**: **ADOPT** `garden`. **ABANDON** warden-emphasis as a shape, with
   the structural reason recorded. Gate goes from two real shapes to three.
   Confidence HIGH.
+
+---
+
+## Batch 16 — EXP-042, the cheap-roster quadrant
+
+### EXP-042 — Can difficulty come from threat while every target stays cheap?
+
+- **Context**: D-030 split the roster into two roles — the *hardest* target sets
+  the accessibility floor, the *threatening* targets set the difficulty ceiling.
+  Three of the four quadrants are now measured: drone-only (accessible, cannot
+  threaten: 93-98%), siphon/warden-heavy (threatening, inaccessible: mid-rung
+  0-3%), and mixed (`surge`, `press`, `garden`). The untested one is **threat
+  without expense**: drones and lobbers only, nothing with a big capacity bar.
+- **Why it matters**: if it works it is the most accessible shape in the set and
+  a fourth independent point for the replication gate. If it does not, D-030
+  needs qualifying — threat and expense would be entangled rather than separable.
+- **Hypothesis**: it lands in band **and produces the highest mid-rung of any
+  shape** — we predict above **35%**, beating `press`'s 32%. Every target is
+  finishable inside one commitment while the lobbers supply the pressure.
+- **The number that could spoil it**: a lobber has capacity 8, so tipping one
+  from empty needs 9 delivered. With throughput 4 and a 10-charge ceiling that is
+  right at the edge of a single turn — so lobbers may turn out to be "expensive"
+  in D-030's sense after all, which would be an interesting way to be wrong.
+- **Risks watched**: the D-024 turtle canary (drones spend themselves and
+  dissolve, which has produced a walkover twice before); and whether removing
+  every high-capacity target collapses tip kills, since fat targets are what the
+  load-then-tip line is *for*.
+- **Measurement**: EXP-039 machinery, 150 seeds to search, 350 on a finalist.
+- **Result**: a valid shape, and the hypothesis **falsified for the reason we
+  named as the possible spoiler**.
+
+  `l1 d2 c3` lands in band at 350 seeds: 55% / 29% / 2%. But the mid-rung is
+  **29%, not the predicted 35%+**, and it is *below* `press`'s 34%. Removing
+  every high-capacity target did not make the shape the most accessible in the
+  set.
+
+  The named spoiler is the explanation. A lobber has capacity 8, so tipping one
+  from empty needs 9 delivered — and it holds range 2-4, so reaching it costs
+  moves the shallow planner does not have to spare. It is "cheap" on the
+  capacity bar and **expensive to finish**, which is the property that actually
+  matters.
+
+  The second watched risk half-fired: tip kills fall to 3.62, well below `surge`
+  (10.21) and `garden` (5.20), because there is no fat target for the
+  load-then-tip line to use. The turtle canary stayed clean at 2%.
+
+### Four-shape replication gate (350 seeds)
+
+| shape | strong | mid-rung | turtle | tip kills | feed | near-overload | deep |
+|---|---|---|---|---|---|---|---|
+| `surge` | 61% | 18% | 3% | 10.21 | 94% | 40% | 29% |
+| `press` | 61% | 34% | 3% | 2.98 | 63% | 54% | 23% |
+| `garden` | 53% | 25% | 3% | 5.20 | 89% | 46% | 47% |
+| `skirmish` | 55% | 29% | 2% | 3.62 | 78% | 55% | 26% |
+
+- **Interpretation**: honestly, `skirmish` **interpolates** the existing three on
+  every aggregate metric rather than opening a new axis — its tip-kill figure is
+  numerically distinct but its whole profile sits between `press` and `garden`.
+  What justifies keeping it is *compositional*, not statistical: it is the only
+  roster in the set with no high-capacity unit at all, so it is the shape that
+  would catch a rule quietly tuned around fat targets. The gate exists to catch
+  exactly that kind of thing, and it has already earned its keep once.
+- **Decision**: **ADOPT** as a fourth shape. **AMEND D-030** — "hardest target"
+  means hardest *to finish*, which combines capacity, reach and evasiveness, not
+  the capacity bar alone. Confidence HIGH on the amendment, MEDIUM on whether a
+  fourth interpolating shape is worth its runtime in every future gate.

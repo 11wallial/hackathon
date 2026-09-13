@@ -18,6 +18,7 @@ const KIND_HINT = {
 const ENCOUNTERS = {
   surge: ['Surge', 'The standard fight. Waves arrive progressively fuller, so late enemies are dangerous and brittle at the same time. Hard: strong play clears it about six times in ten.'],
   press: ['Press', 'Lobbers force charge into you from outside melee range. Being nearly full is where this one is won — flinching from your own capacity loses more often than it saves you.'],
+  skirmish: ['Skirmish', 'One lobber and a pair of drones per wave, and nothing with a big capacity bar. The lightest roster in the set, and the one where you will spend the most time nearly full.'],
   garden: ['Garden', 'One fat scavenger arrives every wave behind a screen of drones. It loads itself off whatever is on the floor, so it has to be tipped rather than shot down.'],
 };
 let encounterId = 'surge';

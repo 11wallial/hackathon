@@ -108,6 +108,23 @@ export const ENCOUNTERS = {
     ],
   },
 
+  // EXP-042. The only shape with no high-capacity target at all: one lobber and
+  // a pair of drones per wave. Built to test whether difficulty can come purely
+  // from threat while every target stays cheap. It lands in band, but not for
+  // the predicted reason — a lobber needs nine delivered and keeps its distance,
+  // so it is "expensive" in the sense that matters. See the D-030 amendment:
+  // reachability is part of expense, not just the capacity bar.
+  skirmish: {
+    name: 'skirmish',
+    waves: [
+      { turn: 1, units: [{ kind: 'lobber', charge: 5 }, { kind: 'drone', charge: 2 }, { kind: 'drone', charge: 2 }] },
+      { turn: 4, units: [{ kind: 'lobber', charge: 6 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }] },
+      { turn: 7, units: [{ kind: 'lobber', charge: 7 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }] },
+      { turn: 10, units: [{ kind: 'lobber', charge: 8 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }] },
+      { turn: 13, units: [{ kind: 'lobber', charge: 9 }, { kind: 'drone', charge: 6 }, { kind: 'drone', charge: 6 }] },
+    ],
+  },
+
   // Rebuilt in EXP-032. One fat scavenger per wave inside a screen of drones:
   // the siphon loads itself off whatever is on the floor and has to be tipped,
   // while the drones give a shallow planner targets it can actually finish.

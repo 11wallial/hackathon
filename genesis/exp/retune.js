@@ -80,6 +80,19 @@ export const droneGen = ({ cadence = 3, perWave = 4, ramp = 1 }) => ({
   })),
 });
 
+// Drones + lobbers only: threat without any high-capacity target. D-030's
+// untested quadrant — see EXP-042.
+export const skirmishGen = ({ cadence = 3, lobbers = 1, drones = 3, ramp = 1 }) => ({
+  name: `skirmish-l${lobbers}-d${drones}-c${cadence}`,
+  waves: Array.from({ length: 5 }, (_, i) => ({
+    turn: 1 + cadence * i,
+    units: [
+      ...Array(lobbers).fill({ kind: 'lobber', charge: 5 + i }),
+      ...Array(drones).fill({ kind: 'drone', charge: 2 + i * ramp }),
+    ],
+  })),
+});
+
 const PANEL = ['random', 'conservative', 'neutralD1', 'miner', 'optimizerNeutral', 'optimizerDeep'];
 
 export function score(enc, seeds = 150, needNearOverload = false, config = {}) {

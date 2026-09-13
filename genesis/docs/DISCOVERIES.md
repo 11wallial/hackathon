@@ -535,3 +535,11 @@ comes from the threatening units instead.
 > thing on the board before touching any number. If nothing there can be
 > finished inside one commitment, the step is in the roster, and no pacing
 > change will move it.
+
+**Amendment, EXP-042.** "Hardest target" means hardest **to finish**, not
+biggest capacity bar. A roster of drones and lobbers — nothing with a large
+capacity — was predicted to be the most accessible shape in the set and came in
+at a mid-rung of 29%, below `press`'s 34%. A lobber needs nine charge delivered
+*and* holds range 2-4, so reaching it costs moves a shallow planner cannot
+spare. Expense is capacity plus reach plus evasiveness, and only the first of
+those is visible on the unit's stat line.
