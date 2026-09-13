@@ -2,65 +2,61 @@
 
 Ranked by expected information gain per unit of implementation cost.
 
-> **Standing gate, earned the hard way.** Before adopting any rule: (a) trace
-> three seeds and *look* at the board — both of this project's worst diagnostic
-> errors (D-010, and the whole of batch 2) came from reasoning about a mechanism
-> nobody had observed; (b) run the panel across every encounter shape — that
-> check caught a 99% do-nothing walkover that was invisible on the encounter the
-> rule was developed against (D-014).
+> **Standing gates, all three earned the hard way.**
+> 1. **Trace before proposing.** Both of this project's worst diagnostic errors
+>    (D-010's invented oscillation, and the whole of batch 2) came from
+>    reasoning about a mechanism nobody had observed.
+> 2. **Decompose before believing.** A metric that has not been separated into
+>    design / correctness / instrument is not evidence about the design — 60%
+>    of the flagship "deadlock" was bugs and agent myopia (D-015).
+> 3. **Replicate across shapes, and across instruments.** One encounter hid a
+>    99% do-nothing walkover (D-014); one evaluation function hid a 3.6x
+>    behavioural difference (D-016).
 
-### 1. EXP-026 — Trace the residual 24.5% of non-resolving encounters
+### 1. EXP-030 — Force-feed encounter: settle Q1 with content, not rules
 
-Not a rule proposal. Dissolution took timeouts from 40.8% to 24.5%; nobody has
-looked at what the remaining quarter are doing. The last two times we skipped
-this step we burned a batch on an invented mechanism. Cheapest item on the list
-and it gates everything else about pacing.
+Q1 is now well posed. The unbiased agent lives near overload 9.1% of the time on
+`surge` and 0.0% on `swarm`, and the difference is *how hard the composition
+pushes charge onto the player*. So build an encounter designed to force-feed —
+several mid-throughput chasers arriving continuously, no siphons to drain the
+floor — and measure top-quartile occupancy under **both** instruments. If it
+clears 25%, the death-clock half of the thesis is real and belongs in content
+rather than in rules. If it does not, retire the claim and say so in the thesis.
+Four rule-level attempts have failed; this is the first content-level one.
 
-### 2. EXP-027 — Decide Q1 rather than tuning it *(unchanged from the last queue, and now overdue)*
+### 2. EXP-031 — Re-tune `surge` against the improved agent
 
-Four experiments (EXP-008, 015, 017, and dissolution's side effect) have failed
-to make the player occupy the dangerous end of their own capacity. One
-experiment, two arms. **Arm A**: an archetype whose whole behaviour is forcing
-charge onto the player from range and which cannot be disarmed by being spent —
-note that a *hungry* enemy now refills, so this is newly buildable in a way it
-was not in EXP-018. **Arm B**: formally retire the claim, and move the tension
-entirely onto enemy capacity. Whichever wins, rewrite the thesis and stop
-revisiting it.
+The strongest agent now wins 78% (it won 41% two batches ago) and the encounter
+has not moved. Difficulty numbers measured against a weaker agent are stale.
+Sweep wave size, arrival cadence and the charge enemies arrive holding, and find
+the setting where the strong agent lands nearer 50-60% without pushing random or
+the turtle back above ~5%.
 
-### 3. EXP-028 — Rebuild the low-CCR encounters as content
+### 3. EXP-032 — Rebuild the low-CCR encounters as real content
 
 `probe` (CCR 0.36) and `garden` (CCR 0.17) are unwinnable under every
-configuration — they predate the energy-budget finding. Rebuild them at CCR
-0.8-1.2 with distinct compositions (siphon-heavy, warden-heavy) so the
-replication gate runs against four *real* shapes instead of two plus two
-controls. This is what makes every future finding trustworthy.
+configuration; they predate the energy-budget finding. Rebuild at CCR 0.8-1.2
+with distinct compositions (siphon-heavy, warden-heavy) so the replication gate
+runs against four *real* shapes instead of two plus two controls. This is what
+makes every future finding trustworthy.
 
-### 4. EXP-029 — A fairer instrument (Q4)
+### 4. EXP-033 — Does starvation deserve to be a real strategy?
 
-Re-run the panel with an optimizer whose evaluation is purely outcome-based,
-with the fear-of-overload term removed. If behaviour is unchanged, every claim
-above is robust to the instrument. Cheap, and it de-risks the whole notebook —
-especially Q1, where the current agent's evaluation explicitly encodes the thing
-under test.
+Starvation is ~4-8% of kills: it exists but is incidental. Is there a version
+where deliberately tanking an enemy dry is a *chosen* line? It is also the one
+mechanism that would make soaking charge attractive, so it may be a second door
+into Q1. Test: give the player a verb that pulls charge *out* of an adjacent
+unit onto the floor, and check whether a starve-focused strategy becomes
+competitive without dominating.
 
-### 5. EXP-030 — Does starvation deserve to be a real strategy? (from D-012)
+### 5. EXP-034 — Is the mastery gap an accessibility problem? (Q7)
 
-Starvation currently accounts for ~4% of the optimizer's kills — it exists but
-is incidental. Is there a version where deliberately tanking an enemy dry is a
-*chosen* line rather than a by-product? That is the one mechanism that would
-make soaking charge attractive, so it may be the back door into Q1. Test: give
-the player a way to accelerate drain (a verb that pulls charge *out* of an
-adjacent unit into the floor) and measure whether a starve-focused strategy
-becomes competitive without dominating.
+Rules from recent batches widen the gradient by punishing the middle of the
+ladder. Build a graded family of non-searching agents and check the curve is
+smooth rather than a cliff between "searches" and "does not". A human lives in
+that middle band.
 
-### 6. EXP-031 — Is the mastery gap an accessibility problem? (Q7)
-
-Rules from the last two batches widen the gradient by punishing the middle of
-the ladder. Measure explicitly: build a "competent but non-searching" agent
-panel at several skill levels and check the curve is smooth rather than a cliff
-between "searches" and "does not".
-
-### 7. EXP-032 — The first rule-changing upgrade (Q6)
+### 6. EXP-035 — The first rule-changing upgrade (Q6)
 
 Only after 1-3 resolve. Three candidates, each altering a *conversion* rather
 than a number: `SHOVE` splits between the target and the tile beyond it; your

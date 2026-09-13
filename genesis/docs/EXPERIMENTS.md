@@ -659,3 +659,134 @@ Versus v0.5: timeouts 40.8% → 24.5%, optimizer 40.8% → 61.5%, tip kills
 3.61 → 5.09, chains 71.6% → 98.8% of runs. Shove-amount entropy is unchanged at
 1.93 with conditional entropy 1.81, so the decision diversity survived the
 change. Conservation violations: 0.
+
+---
+
+## Batch 8 — EXP-026, the residual timeouts
+
+### EXP-026 — Trace the 24.5% that still do not resolve
+
+- **Question**: what are the remaining non-resolving encounters actually doing?
+  (Deliberately not a rule proposal — the last two times we skipped this step we
+  burned a batch on an invented mechanism.)
+- **Result** (`tools/postmortem.js`, 400 seeds, optimizer on `surge`):
+
+  | measure | value |
+  |---|---|
+  | ring occupancy at the end | **26%** — the traffic jam is gone |
+  | runs with enough charge left to finish | **100%** |
+  | runs with exactly 1 enemy left | 53 of 105 |
+  | runs where a siphon survives | 102 of 105 |
+  | share of the last 45 actions that were a bare `end turn` | **61%** |
+  | mean player charge | 32% of capacity |
+  | mean loose charge on the floor | 36.7 |
+
+  Trace of seed 3001, turns 40-45, is unambiguous:
+  `. SIP14/14+13 .+15 .+2 .+4 YOU4/8 . . . . . SIP6/14` — a siphon sitting at
+  **exactly 14/14**, one single point of charge from detonating, while the
+  player idles four nodes away pressing end turn, and a second siphon flips
+  between nodes 11 and 0 forever.
+
+- **Interpretation**: three distinct defects, none of them the *design*.
+  1. **Blocked-move oscillation (engine bug).** `if (!moveUnit(dir)) moveUnit(-dir)`
+     means a unit whose path is blocked walks *backwards*. On a ring that is a
+     stable 2-cycle: the second siphon wants node 2, node 1 is occupied, so it
+     reverses, then re-approaches, forever.
+  2. **Full scavenger no-op (engine bug).** `aiScavenge` returns after trying to
+     absorb whenever it is standing on motes — but under `absorbCap` a full unit
+     absorbs nothing, so it burns its action doing nothing, permanently.
+  3. **Search myopia (instrument, not game).** Killing a siphon needs 15 charge
+     delivered. The 2-ply optimizer can only see kills reachable inside this
+     turn, so partial progress scores as pure loss (−1.5 per charge spent) and it
+     never starts. Half the stuck runs are a winnable position the agent cannot
+     see. This is Q4 arriving with evidence.
+- **Decision**: fix (1) and (2) as correctness bugs; treat (3) as an instrument
+  change and measure it **separately**, so we know how much of the 26% was the
+  game and how much was us. Confidence HIGH.
+
+### EXP-027 — Decomposing the residual: engine bugs vs. instrument
+
+- **Hypothesis**: the two engine bugs are worth less than the myopia. We predict
+  the bug fixes alone take optimizer timeouts from 26.3% to **below 20%**, and
+  that adding a distance-to-goal term to the evaluation (total charge still
+  needed to clear the board — the win condition's own metric, not a tactic)
+  takes it **below 12%**.
+- **Risk being watched**: the evaluation term is a Goodhart hazard. If it makes
+  the agent chip mindlessly at big targets, `tipKills` will fall and the skill
+  gradient will narrow. Either would mean we improved a number and damaged the
+  game; the term would then be rejected even if timeouts improve.
+- **Measurement**: staged — baseline, +bug fixes, +evaluation term — with
+  tipKills and the full panel at each stage.
+- **Result**: both halves falsified, in opposite directions.
+  The two engine bug fixes alone took optimizer timeouts **24.5% → 10.3%** and
+  win rate 61.5% → 78.0% (predicted only "below 20%") — they were worth far
+  more than predicted. The distance-to-goal evaluation term then made things
+  dramatically **worse**: timeouts 10.3% → **67.3%**, win 78.0% → 29.0%, tip
+  kills 3.58 → 1.80, detonations 10.97 → 4.34.
+- **Interpretation**: the pre-registered Goodhart watch fired exactly as
+  written. Rewarding "reduce the charge still needed to clear the board" pays
+  the agent for *loading* enemies without finishing them — partial progress
+  scores nearly as well as a kill — so it hoards, parks at 25-50% capacity
+  (band `[0.06, 0.84, 0.09, 0.01]`) and stops killing. A distance-to-goal
+  heuristic is only safe when being closer is monotonically better, and in a
+  game where a nearly-full enemy is *more dangerous* than an empty one, it is
+  not.
+- **Decision**: **KEEP** the bug fixes. **KILL** the distance-to-goal term.
+  Confidence HIGH.
+
+### EXP-028 — Is the rest of the residual myopia or design?
+
+- **Hypothesis** (written before running): if the remaining timeouts are the
+  search horizon rather than the rules, simply deepening the search from 2 to 3
+  actions should cut them substantially without any rules change.
+- **Result**: timeouts **12.0% → 5.0%**, win rate 75.5% → 82.5%, chains in
+  100% of runs, at about 3x the compute (9.7s for 400 encounters).
+- **Interpretation**: confirmed. This completes the decomposition of the
+  original 40.8% deadlock, and the headline is that **most of a "design defect"
+  was not design**:
+
+  | cause | share of the original 40.8% | kind |
+  |---|---|---|
+  | traffic jam of spent bodies (D-012) | ~16pp | **design** |
+  | two enemy-AI bugs (EXP-026) | ~13pp | correctness |
+  | search horizon (this experiment) | ~7pp | instrument |
+  | genuinely unresolvable | **~5pp** | design |
+
+- **Decision**: **KEEP** `optimizerDeep` as the strong-play reference. The
+  depth-2 `optimizer` stays the default so that every number recorded in earlier
+  batches remains comparable. Confidence HIGH.
+
+### EXP-029 — The neutral instrument (Q4), and a correction to D-008
+
+- **Hypothesis** (pre-registered in the previous queue): if an optimizer with a
+  purely outcome-based evaluation — no fear-of-overload term, no adjacency or
+  hot penalties, no hint about how to kill anything — behaves like the standard
+  one, the notebook's claims are robust to the instrument.
+- **Result**: it does **not** behave the same, and the difference lands exactly
+  where it matters most.
+
+  | | standard optimizer | neutral optimizer |
+  |---|---|---|
+  | win (`surge`) | 78.0% | 55.5% |
+  | top charge quartile | 3.0% | **12.5%** |
+  | near-overload turns | 2.5% | **9.1%** |
+  | tip kills / run | 3.64 | **4.82** |
+  | win (`swarm`) | 79% | **99%** |
+
+- **Interpretation**: two findings, one of them a correction to our own work.
+  1. **D-008 was measured with a biased instrument.** Its claim is that nothing
+     will make the player approach their own overload — but the agent producing
+     that evidence had an explicit `-25 per point of headroom below 4` fear term.
+     Remove it and near-overload play rises **3.6x**. D-008 is not overturned
+     (9.1% is still not "living on the brink", and on drone-only `swarm` the
+     neutral agent shows 0.0%), but its absolute form is too strong and is now
+     corrected. Notably the corrected data *supports* D-008's own prescription:
+     the danger band is occupied only on the encounter that forces charge onto
+     the player, i.e. pressure, not incentive.
+  2. **The signature mechanic is not an artefact.** Tip kills are *higher*
+     under the unbiased evaluation (4.82 vs 3.64), so "load them from the floor,
+     then tip them" is something the game rewards, not something our scoring
+     function planted.
+- **Decision**: **KEEP** `optimizerNeutral` permanently in the panel as an
+  instrument check. Confidence HIGH on the bias, MEDIUM on its magnitude.
+

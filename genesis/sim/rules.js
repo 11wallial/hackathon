@@ -529,15 +529,17 @@ function aiChase(s, u) {
     return; // spent or staggered chasers become walls: legible, and positional
   }
   if (!canMoveThisTurn(s, u)) return;
-  const dir = towards(u.node, p.node, R);
-  if (!moveUnit(s, u, dir)) moveUnit(s, u, -dir);
+  // Blocked means blocked. Reversing looks like pathfinding but on a ring it is
+  // a stable two-cycle: the unit walks away, re-approaches, and repeats forever
+  // (seen in EXP-026, seed 3001). Spent bodies dissolve now, so waiting is safe.
+  moveUnit(s, u, towards(u.node, p.node, R));
 }
 
 function aiScavenge(s, u) {
   const R = s.config.ringSize;
   const p = getPlayer(s);
 
-  if (s.ring[u.node] > 0) {
+  if (s.ring[u.node] > 0 && u.charge < u.capacity) {
     absorbFrom(s, u, u.node);
     return;
   }
@@ -552,8 +554,7 @@ function aiScavenge(s, u) {
   }
   if (best >= 0) {
     if (!canMoveThisTurn(s, u)) return;
-    const dir = towards(u.node, best, R);
-    if (!moveUnit(s, u, dir)) moveUnit(s, u, -dir);
+    moveUnit(s, u, towards(u.node, best, R));
     return;
   }
   if (p && p.alive && ringDist(u.node, p.node, R) === 1 && u.charge >= u.throughput) {
@@ -561,8 +562,7 @@ function aiScavenge(s, u) {
     return;
   }
   if (p && p.alive && canMoveThisTurn(s, u)) {
-    const away = -towards(u.node, p.node, R);
-    if (!moveUnit(s, u, away)) moveUnit(s, u, -away);
+    moveUnit(s, u, -towards(u.node, p.node, R));
   }
 }
 

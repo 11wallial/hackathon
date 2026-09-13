@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v0.6 prototype
+## The game — **OVERLOAD**, v0.7 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -31,16 +31,22 @@ measurement cannot drift apart.
 
 ## Status by evidence
 
-Panel on 400 shared seeds, encounter `surge`, v0.6 defaults:
+Panel on 400 shared seeds, encounter `surge`, v0.7 defaults:
 
 | agent | win | loss | timeout |
 |---|---|---|---|
-| random | 2.0% | 22.5% | 75.5% |
-| explorer | 5.8% | 20.3% | 74.0% |
-| conservative (turtle) | 8.0% | 46.3% | 45.8% |
-| miner (explicit expert policy) | 17.0% | 36.5% | 46.5% |
-| greedy | 24.5% | 62.7% | 12.8% |
-| **optimizer** (2-ply search) | **61.5%** | 14.0% | 24.5% |
+| random | 2.3% | 4.5% | 93.3% |
+| explorer | 3.3% | 5.5% | 91.3% |
+| conservative (turtle) | 6.0% | 34.3% | 59.8% |
+| greedy | 23.0% | 67.3% | 9.8% |
+| miner (explicit expert policy) | 28.2% | 29.0% | 42.8% |
+| optimizerNeutral (unbiased evaluation) | 55.5% | 8.5% | 36.0% |
+| optimizer (2-ply search) | 78.0% | 11.8% | 10.3% |
+| **optimizerDeep** (3-ply search) | **78.3%** | 15.5% | **6.3%** |
+
+Eight distinct rungs. Two instruments with different evaluation functions are
+kept permanently in the panel, because EXP-029 showed a single one is not a
+neutral window onto the game (D-016).
 
 | Claim | Evidence | Confidence |
 |---|---|---|
@@ -52,17 +58,32 @@ Panel on 400 shared seeds, encounter `surge`, v0.6 defaults:
 | Findings replicate across shapes | validated on `surge` and `swarm`; two other encounters are low-CCR controls | LOW-MEDIUM |
 | Charge is a felt *death clock* | **not demonstrated after four attempts** — see OPEN_QUESTIONS Q1 | LOW |
 
+## The deadlock, fully decomposed
+
+The headline defect of v0.5 was that 40.8% of encounters never resolved. It
+turned out to be four different things, and only two of them were design:
+
+| cause | share | kind | fixed by |
+|---|---|---|---|
+| traffic jam of spent bodies | ~16pp | **design** | dissolution (D-012) |
+| two enemy-AI bugs | ~13pp | correctness | EXP-026 |
+| search horizon | ~7pp | instrument | depth 3 (EXP-028) |
+| genuinely unresolvable | **~5pp** | design | open |
+
+Two batches were spent proposing *rules* for a number that was 60% bugs and
+agent myopia. See D-015.
+
 ## Known defects
 
-1. **24.5% of encounters still do not resolve.** Down from 40.8% once spent
-   bodies were made to dissolve (D-012), but the residual is untraced. Two
-   earlier attempts to fix the deadlock failed because the mechanism was
-   *assumed* rather than observed — do not propose a third rule before tracing
-   one of the remaining timeouts.
-2. **The player's own capacity is not yet a source of tension** (Q1). Four
-   experiments have failed to make the player approach their own overload.
-   This needs a decision, not more tuning.
-3. **Rules that widen the skill gradient keep doing it by punishing the middle**
+1. **~5% of encounters are genuinely unresolvable.** Down from 40.8%. This is
+   now a small enough residual that it is not the highest-value target.
+2. **The strongest agent wins 78%**, which may mean `surge` is now too easy for
+   competent play. Watch item, not yet acted on — the agent got much better
+   this batch and the encounter has not been re-tuned against it.
+3. **The player's own capacity is still a weak source of tension** (Q1) —
+   though EXP-029 showed our evidence for that was partly instrument bias, and
+   the unbiased agent does play near overload 9.1% of the time on `surge`.
+4. **Rules that widen the skill gradient keep doing it by punishing the middle**
    of the ladder rather than rewarding the top (Q7).
 
 ## The lab
@@ -74,12 +95,15 @@ genesis/
               config.js       every mutable rule, as data. Experiments are overrides.
               content.js      archetypes + encounters, data only
               rng.js          seeded RNG whose state lives inside the game state
-  agents/     index.js        random, conservative, greedy, explorer, bomber, miner, optimizer
+  agents/     index.js        random, conservative, greedy, explorer, miner,
+                              optimizer (2-ply), optimizerDeep (3-ply),
+                              optimizerNeutral (unbiased evaluation)
   exp/        runner.js       harness; asserts conservation on *every* transition
               batch1..7.js    the recorded experiment batches
               ccr.js          the energy-budget phase sweep
   test/       core.test.js    8 invariant tests
   tools/      trace.js        human-readable replay of one seed
+              postmortem.js   aggregate final state of runs that failed to resolve
   docs/                       this laboratory's memory
 ```
 

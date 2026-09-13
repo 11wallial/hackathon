@@ -131,6 +131,19 @@ tuning changes the shape of it.
 > carrying it. It becomes dangerous only when something else *forces* it on
 > them faster than they can spend it. Design the pressure, not the incentive.
 
+**Correction, EXP-029.** The evidence above came from an agent whose evaluation
+function contained an explicit `-25 per point of headroom below 4` fear term —
+we were measuring danger-avoidance with an instrument told to avoid danger. An
+optimizer with a purely outcome-based evaluation occupies the top charge
+quartile **12.5%** of turns and plays near overload **9.1%** of turns, against
+3.0% and 2.5% for the biased one: a 3.6x difference.
+
+The principle survives and is arguably strengthened — the neutral agent lives
+near the brink on `surge`, which pushes charge onto the player, and *not at all*
+on drone-only `swarm` (0.0%), which is exactly "pressure, not incentive". But
+the absolute claim that nothing can make the player approach overload was too
+strong, and part of the reason it looked airtight was us.
+
 ### D-009 — In a conserved economy, damage is self-limiting
 
 **Evidence**: EXP-018 scaled enemy shove strength 1x → 3x. Player near-overload
@@ -225,3 +238,35 @@ and it was invisible on the shape the rule was developed against.
 > **Principle**: a rule is adopted against the *panel of encounters*, never
 > against the one you were looking at. Cheap to run, and it caught a degenerate
 > walkover that would otherwise have become the baseline.
+
+### D-015 — A design metric can be dominated by causes that are not design
+
+**Evidence**: the 40.8% deadlock decomposed as ~16pp traffic jam (design),
+~13pp enemy-AI bugs, ~7pp search horizon, ~5pp genuinely unresolvable.
+
+We spent two batches proposing *rules* to fix a number that was 60% engine bugs
+and agent myopia. The two AI bugs were mundane — a blocked unit reversing
+direction into a stable two-cycle, and a full scavenger burning its action on an
+absorb that took nothing — and neither is visible in any aggregate. Both were
+obvious within thirty seconds of reading a board.
+
+> **Principle**: before treating a metric as a design signal, decompose it.
+> A number that has not been separated into design / correctness / instrument
+> is not evidence about the design.
+
+### D-016 — Your evaluation function is part of the experiment
+
+**Evidence**: EXP-029 — removing one fear term from the agent's evaluation
+changed near-overload play by 3.6x and flipped the result on one encounter
+(`swarm`: 79% → 99%). EXP-027 — *adding* a plausible, strategy-neutral
+distance-to-goal term collapsed the same agent from 78% to 29% by paying it to
+load enemies without finishing them.
+
+An agent's evaluation function is not a neutral window onto the game. It encodes
+beliefs, and any claim about player behaviour is a claim about *that agent's*
+behaviour until checked against a different one.
+
+> **Principle**: keep at least two instruments with different evaluations and
+> report both. And never add a heuristic term to fix a measurement — in a game
+> where being closer to a goal can be more dangerous than being far from it,
+> "distance to goal" is not monotone and will be exploited.

@@ -104,6 +104,23 @@ Enlarging the ring from 12 to 16 or 20 nodes moved timeouts by 3pp and 20 was
 extra nodes add empty ring behind the queue, not room inside it. Valuable as the
 control that ruled out "just add space" and isolated dissolution as the real fix.
 
+### Distance-to-goal evaluation term — **KILLED** (EXP-027)
+
+*Intuition*: a 2-ply search can never see a kill that needs 15 charge delivered,
+so partial progress scores as pure loss. Give the agent the win condition's own
+distance metric — total charge still needed to clear the board. Strategy-neutral
+by construction, and the textbook fix for the horizon effect.
+*What failed*: catastrophically. Timeouts 10.3% → **67.3%**, win 78.0% → 29.0%,
+tip kills halved. Rewarding "closer to clearing" pays the agent for *loading*
+enemies without finishing them, because a nearly-full enemy scores almost as
+well as a dead one. It hoards, parks at 25-50% capacity, and stops killing.
+*The general lesson*: a distance-to-goal heuristic is only safe when being
+closer is monotonically better. Here a nearly-full enemy is **more dangerous**
+than an empty one, so the metric is not monotone and the search exploits it.
+*Salvaged*: the underlying diagnosis was right — the residual really was myopia.
+Deepening the search from 2 to 3 actions fixed it properly (12.0% → 5.0%)
+without touching the evaluation. Fix the horizon, not the scoring.
+
 ### `bomber` agent — **KILLED**
 
 A badly specified "commit to one strategy" agent: 0% win, 19% death. Its pile

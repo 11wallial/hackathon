@@ -48,16 +48,16 @@ reproducible from these commands.
 
 ## Read the notebook
 
-Start with **`docs/DISCOVERIES.md`** — fourteen principles that were *earned*,
-each naming its evidence, including one marked **FALSIFIED** and kept as a
-correction. Then:
+Start with **`docs/DISCOVERIES.md`** — sixteen principles that were *earned*,
+each naming its evidence, including one marked **FALSIFIED** and one carrying a
+correction to its own supporting data. Then:
 
 | File | What it holds |
 |---|---|
 | `docs/PROJECT_STATE.md` | what exists, what is proven, and the top defect |
 | `docs/DESIGN_THESIS.md` | current belief + two dated revisions, with what was falsified |
-| `docs/EXPERIMENTS.md` | 25 experiments, hypotheses pre-registered before each run |
-| `docs/GRAVEYARD.md` | ten killed mechanics, why each failed — and one resurrection |
+| `docs/EXPERIMENTS.md` | 29 experiments, hypotheses pre-registered before each run |
+| `docs/GRAVEYARD.md` | eleven killed mechanics, why each failed — and one resurrection |
 | `docs/OPEN_QUESTIONS.md` | the unresolved questions, ranked |
 | `docs/NEXT_EXPERIMENTS.md` | the ranked queue |
 | `docs/MECHANIC_GENEALOGY.md` | where each mechanic came from and what it mutated into |
@@ -81,6 +81,18 @@ a charge oscillation. Two rules were built against it and both made it worse.
 Then somebody traced the board: nine units on twelve nodes, nothing moving, a
 spent drone standing as a permanent wall. It was a traffic jam. That entry is
 kept in `DISCOVERIES.md` marked **FALSIFIED** rather than deleted.
+
+**And the flagship defect turned out to be mostly not design.** Fully
+decomposed, the 40.8% deadlock was ~16pp traffic jam, ~13pp two enemy-AI bugs
+(a blocked unit reversing into a stable two-cycle; a full scavenger burning its
+action on an absorb that took nothing), ~7pp search horizon, and ~5pp genuinely
+unresolvable. Neither bug is visible in any aggregate, and both were obvious
+within thirty seconds of reading a board.
+
+**The measuring instrument was part of the result.** The agent producing our
+evidence that "players never approach their own overload" had an explicit
+fear-of-overload term in its evaluation. An unbiased one plays near overload
+3.6x more often. The notebook now keeps two instruments and reports both.
 
 ## Architecture
 

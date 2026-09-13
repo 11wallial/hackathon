@@ -191,10 +191,30 @@ function evaluate(s) {
   return score;
 }
 
-function optimizerAgent(seed) {
+// Distance-to-goal: total charge still required to clear the board. This is the
+// win condition's own metric, not a tactic — it is the standard fix for the
+// horizon effect, where a target needing 15 charge can never be killed inside a
+// 2-ply search so partial progress scores as pure loss.
+function chargeToClear(s) {
+  let need = 0;
+  for (const e of enemies(s)) need += e.capacity - e.charge + 1;
+  return need;
+}
+
+// Q4 instrument check. Purely outcome-based: enemies alive, player alive,
+// distance to goal. No fear-of-overload term, no adjacency or hot penalties,
+// no hint about how to kill anything. If the findings hold under this agent
+// they are not artefacts of the evaluation function.
+function evaluateNeutral(s) {
+  if (s.result === 'win') return 10000 - s.turn * 5;
+  if (s.result === 'loss' || s.result === 'timeout') return -10000;
+  return -120 * enemies(s).length - 3 * chargeToClear(s);
+}
+
+function optimizerAgent(seed, evalFn = evaluate, name = 'optimizer', maxDepth = 2) {
   const rnd = agentRng(seed);
   return {
-    name: 'optimizer',
+    name,
     act(s) {
       const root = legalActions(s);
       if (!root.length) return { type: 'end' };
@@ -214,14 +234,14 @@ function optimizerAgent(seed) {
         if (st.result || depth === 0 || st.actionsLeft <= 0) {
           const closed = cloneState(st);
           applyAction(closed, { type: 'end' });
-          consider(evaluate(closed), first, cost);
+          consider(evalFn(closed), first, cost);
           return;
         }
         for (const a of legalActions(st)) {
           if (a.type === 'end') {
             const closed = cloneState(st);
             applyAction(closed, a);
-            consider(evaluate(closed), first ?? a, cost);
+            consider(evalFn(closed), first ?? a, cost);
             continue;
           }
           const next = cloneState(st);
@@ -229,7 +249,7 @@ function optimizerAgent(seed) {
           search(next, first ?? a, depth - 1, cost + 1);
         }
       };
-      search(s, null, Math.min(2, s.actionsLeft), 0);
+      search(s, null, Math.min(maxDepth, s.actionsLeft), 0);
       return best || { type: 'end' };
     },
   };
@@ -353,6 +373,12 @@ export const AGENTS = {
   bomber: bomberAgent,
   miner: minerAgent,
   optimizer: optimizerAgent,
+  // Same search, evaluation extended with distance-to-goal (EXP-027 stage 3).
+  optimizerGoal: (seed) => optimizerAgent(seed, (s) => evaluate(s) - 3 * chargeToClear(s), 'optimizerGoal'),
+  // Same search, evaluation stripped to outcomes only (EXP-029 / Q4).
+  optimizerNeutral: (seed) => optimizerAgent(seed, evaluateNeutral, 'optimizerNeutral'),
+  // Same evaluation, deeper horizon — isolates search myopia from design (EXP-028).
+  optimizerDeep: (seed) => optimizerAgent(seed, evaluate, 'optimizerDeep', 3),
 };
 
 export function makeAgent(name, seed) {

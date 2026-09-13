@@ -2,18 +2,20 @@
 
 Unresolved, ranked by how much they would change the design.
 
-### Q1 — Is "charge is your death clock" salvageable at all? *(highest stakes)*
+### Q1 — Is "charge is your death clock" salvageable? *(highest stakes, now better posed)*
 
-Three experiments (EXP-008, 015, 017) failed to make the player occupy the
-dangerous end of their own capacity, and D-008 explains why: no reward justifies
-a catastrophic threshold. D-009 then showed the obvious pressure lever points
-backwards.
+Four experiments (EXP-008, 015, 017, and dissolution's side effect) failed to
+make the player occupy the dangerous end of their capacity — but EXP-029 then
+showed that evidence was collected with an agent explicitly told to fear
+overload. The unbiased instrument plays near overload **9.1%** of turns on
+`surge` and **0.0%** on drone-only `swarm`.
 
-Either we find a mechanism that *forces* charge onto the player faster than they
-can dispose of it, or we accept that the player's overload is an edge case and
-the real drama lives in the enemies' capacity, not the player's. The second
-answer is legitimate — the game plays well already — but it means rewriting a
-third of the thesis. **Do not tune this further; decide it.**
+That sharpens the question rather than closing it. The danger band is occupied
+exactly where the encounter forces charge onto the player, which is what D-008
+prescribed. So the live question is no longer "can it work" but **"which
+encounter compositions force enough charge onto the player, and is 9% enough to
+feel like a clock?"** That is answerable by building an encounter designed to
+force-feed and measuring it — not by another rule tweak.
 
 ### Q2 — What ends a deadlock? — **ANSWERED** (EXP-022, EXP-025)
 
@@ -30,12 +32,17 @@ D-007's fix (`absorbCap`) legible. But it also means the player never decides
 "do I want this". An opt-in `TAKE n` action would add a decision and a verb.
 Does it earn its complexity, or does it just add a button to a solved problem?
 
-### Q4 — Is the optimizer's 41.7% the right difficulty, and is it the right *agent*?
+### Q4 — Is the optimizer the right *agent*? — **ANSWERED, and it mattered**
 
-A 2-ply search with a hand-written evaluation is a proxy for a good human, not a
-good human. Its evaluation contains a fear-of-overload term, which means it is
-not independent evidence for Q1. A search with a purely outcome-based evaluation
-would be a fairer instrument.
+No, not on its own. EXP-029 built the unbiased instrument and it changed the
+answer to the question it was built to check: removing the fear-of-overload term
+raised near-overload play 3.6x and flipped `swarm` from 79% to 99%. Two
+instruments are now kept permanently in the panel (D-016), and D-008 carries a
+correction.
+
+*Residual*: the difficulty half of the question is now live in the other
+direction — the strongest agent wins 78%, and `surge` has not been re-tuned
+since the agent got substantially better.
 
 ### Q5 — Does any of this survive a second encounter shape? — **PARTLY ANSWERED**
 
