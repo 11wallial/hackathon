@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v0.8 prototype
+## The game — **OVERLOAD**, v0.9 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -55,7 +55,8 @@ neutral window onto the game (D-016).
 | The board does not play itself | kill causes are player shove / blast / starvation; 0% ambient floor | HIGH |
 | Depth is not reducible to a rule | hand-written expert policy reaches 17.0%, search reaches 61.5% | MEDIUM |
 | Chains are real emergence | 98.8% of optimizer runs contain one; max length 6 | MEDIUM |
-| Findings replicate across shapes | validated on `surge` and `swarm`; two other encounters are low-CCR controls | LOW-MEDIUM |
+| Findings replicate across shapes | validated on `surge`, `swarm` and `press`; two encounters are low-CCR controls | MEDIUM |
+| The skill step is one action wide | depth 1 → 2 is +30.7pp on `surge`, depth 2 → 3 is +0.0pp, evaluation held fixed | HIGH |
 | Charge is a felt *death clock* | **demonstrated** on `press`: the agent without a fear-of-overload term beats the one with it, 57.8% vs 52.5%, while spending 31.8% of turns near overload vs 5.9% | MEDIUM-HIGH |
 
 ## The deadlock, fully decomposed
@@ -80,13 +81,15 @@ agent myopia. See D-015.
 2. **The strongest agent wins 78%**, which may mean `surge` is now too easy for
    competent play. Watch item, not yet acted on — the agent got much better
    this batch and the encounter has not been re-tuned against it.
-3. **The skill curve is close to a step function** (Q7, now the top open
-   question). On `press` every non-searching agent lands between 4.5% and 10.5%
-   while searching agents take 39-58%. A game whose difficulty curve is a step
-   at "can you plan two moves ahead" does not have a difficulty curve.
-4. **Self-detonation may be becoming routine.** On `press` the player burns out
-   ~3.5 times per run. D-005 earned burnout its place as a dramatic *choice*;
-   at this rate it is closer to a cost of doing business.
+3. **Self-detonation may be becoming routine** (Q8, top open question). On
+   `press` the player burns out ~3.5 times per run and ends with 7.25 of 10
+   capacity gone. D-005 earned burnout its place as a dramatic *choice*; at this
+   rate it is a cost of doing business, which would quietly undo that finding.
+4. **The legibility fix for the depth-1/depth-2 step is unvalidated.** EXP-034
+   located the gap precisely and the client now surfaces the arithmetic that
+   closes it — but agents have perfect information, so no simulation can say
+   whether it helps a person (D-020). This is the first thing here that needs a
+   human playtest.
 
 ## The lab
 

@@ -898,3 +898,71 @@ greedy and the miner last. It separates "searches" from "does not" and almost
 nothing else, which makes Q7 (is the mastery gap an accessibility cliff?) more
 pressing, not less. The two encounters now have distinct jobs: `surge` is the
 well-shaped fight with eight rungs, `press` is the pressure test.
+
+---
+
+## Batch 10 — EXP-034, is the difficulty curve a step?
+
+### EXP-034 — Isolate planning depth
+
+- **Context**: Q7 is now the top open question. On `press` every non-searching
+  agent lands between 4.5% and 10.5% while searching agents take 39-58%. But
+  those agents differ in *many* ways (hand-written policy vs search, different
+  evaluations), so the comparison cannot say whether depth is the variable.
+- **Question**: holding the evaluation function fixed and varying **only**
+  search depth, is the curve a ramp or a step?
+- **Hypothesis**: a step, with the largest jump between depth 1 and depth 2
+  (predicted **> 20pp**), and a much smaller increment from 2 to 3 (predicted
+  **< 10pp**). The reason is mechanical: the game's signature line is *salt the
+  retreat* — step away from a chaser, then mine the tile you just vacated — and
+  the second half of that plan only becomes **legal** after the first half is
+  played. A depth-1 agent cannot represent it at all, no matter how good its
+  evaluation.
+- **Why it matters**: if the cliff is exactly at "two-action plans", this is a
+  **comprehension** problem wearing a difficulty costume. The response would be
+  to make what a 2-ply search sees *visible* — show the player where each enemy
+  will move next — rather than to tune any number.
+- **Measurement**: `optimizerNeutral` at depths 1, 2, 3 on both `surge` and
+  `press`, same evaluation throughout.
+- **Result**: the shape was predicted correctly and the **framing that motivated
+  the experiment was wrong**.
+
+  | encounter | depth 1 | depth 2 | depth 3 |
+  |---|---|---|---|
+  | `surge` | 26.3% | **57.0% (+30.7pp)** | 57.0% (+0.0pp) |
+  | `press` | 53.3% | 59.7% (+6.3pp) | 54.7% (−5.0pp) |
+
+  Both numeric predictions hold on `surge` (>20pp then <10pp). But `press` —
+  the encounter this experiment was written to investigate, because its panel
+  looked like a cliff — is where depth matters **least**.
+
+- **Interpretation**: two corrections.
+  1. **`press` is not a planning cliff.** Its non-searching agents fail for
+     unrelated reasons: greedy dies 90.8% of the time and the miner 87.8%. They
+     are not losing to shallow planning, they are losing to charge management
+     under pressure — and a depth-1 *searcher* handles it fine at 53.3%. The two
+     encounters test genuinely different skills, which is a better outcome than
+     the one we feared.
+  2. **The mechanism on `surge` is not the one we named.** A follow-up scan
+     (`tools/comboscan.js`) shows salt-the-retreat is real and strongly
+     depth-gated — 4.2% of depth-2 turns against 0.4% of depth-1 turns, 2.5x the
+     kills per run — but it accounts for only **6.2% of kills**. It cannot
+     explain a 30pp gap.
+
+     What does: depth 2 gets **7.07 kills per run against depth 1's 4.80**.
+     A single shove delivers at most 4, and a drone at 2/6 needs 5. Depth 1 is
+     mechanically *able* to shove twice in a turn, but it never starts, because
+     the first shove alone leaves the enemy alive and scores as pure loss. The
+     cliff is **committing to a kill that takes more than one action**.
+
+- **Decision**: this is a **comprehension** problem, and the response is
+  legibility rather than tuning (brief §26). A depth-2 search knows two things a
+  new player does not: exactly how much charge a target still needs, and how
+  much the player can actually deliver before the turn ends. Both are now shown
+  on the board. Confidence HIGH on the measurement, MEDIUM on the fix, which is
+  **untested against humans** — see the caveat below.
+- **Honest caveat**: agents already have perfect information, so no agent
+  experiment can validate a legibility change. What the agents established is
+  *which* information separates depth-1 from depth-2 play. Whether surfacing it
+  helps a human is unmeasured, and stays unmeasured until there is a human
+  playtest.

@@ -306,3 +306,58 @@ the counter is positional rather than statistical. The measured behaviour shows
 the counter is real but expensive — the strong agent closes to range 1 only
 14.4% of turns and spends 69.6% inside the threatened band, because closing on
 one lobber exposes it to the others.
+
+### D-019 — A difficulty cliff can be a comprehension cliff, and the difference is measurable
+
+**Evidence**: EXP-034. Holding the evaluation function fixed and varying only
+search depth on `surge`: depth 1 wins 26.3%, depth 2 wins 57.0% (+30.7pp), depth
+3 wins 57.0% (+0.0pp). A clean step, and it is *one action wide*.
+
+What depth 2 has is not exotic. A single shove delivers at most 4; a drone at
+2/6 needs 5. Depth 1 is perfectly *able* to shove twice in one turn — it simply
+never starts, because the first shove alone leaves the enemy alive and scores as
+pure loss. The cliff is **committing to a kill that takes more than one action**,
+and the information that closes it is arithmetic the game already knows: how
+much this target still needs, and how much you can deliver before the turn ends.
+
+The follow-up scan matters here too. The obvious culprit — *salt the retreat*,
+the two-action pattern whose second half only becomes legal after the first — is
+strongly depth-gated (4.2% of depth-2 turns vs 0.4% of depth-1) but accounts for
+only 6.2% of kills. It could not explain a 30pp gap, and believing it would have
+sent us to fix the wrong thing.
+
+> **Principle**: when a skill gap appears, vary *one* faculty at a time and find
+> how wide the step is. A gap one action wide is usually something the interface
+> can say out loud. A gap that widens with every increment is genuine depth.
+
+### D-020 — Agents can tell you which information matters; they cannot tell you whether showing it helps
+
+**Evidence**: EXP-034 established that the depth-1/depth-2 gap is carried by
+specific arithmetic. But every agent in the panel already has perfect
+information, so no agent experiment can measure whether surfacing that
+arithmetic helps a person.
+
+The legibility change built on this finding is therefore **unvalidated**, and is
+labelled as such in EXPERIMENTS.md rather than counted as a result. What the
+simulation bought was the diagnosis, not the cure.
+
+> **Principle**: simulated players are an instrument for finding *what* a
+> decision depends on. The moment a fix is about perception rather than
+> mechanics, the instrument stops applying — say so instead of quietly
+> extending its authority.
+
+### D-021 — The encounter that looked like a cliff wasn't the one that had it
+
+**Evidence**: `press` was promoted to the top open question because its panel
+showed non-searching agents clustered at 4.5-10.5% against searchers at 39-58%.
+With depth isolated, `press` is where depth matters *least* (+6.3pp from depth 1
+to 2), and `surge` — which looked healthy, with eight evenly spread rungs — is
+where the step is (+30.7pp).
+
+The `press` agents were not failing at planning. Greedy dies 90.8% of the time
+and the miner 87.8%: they fail at charge management under pressure, and a
+depth-1 *searcher* handles the encounter fine at 53.3%.
+
+> **Principle**: a spread of win rates across a mixed agent panel does not
+> localise a skill. Agents differ in many ways at once; to attribute a gap to a
+> faculty, hold everything else fixed and vary that faculty alone.

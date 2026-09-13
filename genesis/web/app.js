@@ -3,7 +3,7 @@
 
 import {
   createEncounter, applyAction, legalActions, cloneState, isOver,
-  getPlayer, unitAt, isHot, mod, playerActionsFor,
+  getPlayer, unitAt, isHot, mod, playerActionsFor, predictNextNode, killMath, enemies, ringDist,
 } from '../sim/rules.js';
 
 const R = 12;
@@ -64,6 +64,20 @@ function render() {
     svg.push(`<circle cx="${q.x}" cy="${q.y}" r="34" fill="none" stroke="#ff547026" stroke-width="5"/>`);
   }
 
+  // Where each enemy will step next. A two-move search knows this; a new player
+  // does not, and EXP-034 showed that gap is worth ~30 percentage points.
+  const arrivals = new Map();
+  for (const e of state.units) {
+    if (!e.alive || e.team !== 'enemy') continue;
+    const n = predictNextNode(state, e);
+    if (n !== e.node) arrivals.set(n, (arrivals.get(n) || []).concat(e));
+  }
+  for (const [n, list] of arrivals) {
+    const q = pos(n);
+    svg.push(`<circle cx="${q.x}" cy="${q.y}" r="29" fill="none" stroke="#58c8ff" stroke-width="2" stroke-dasharray="2 6" opacity="0.75"/>`);
+    svg.push(`<text x="${q.x}" y="${q.y - 34}" text-anchor="middle" font-size="9" letter-spacing="1" fill="#58c8ff">↓ ${list.length > 1 ? list.length + ' INCOMING' : 'INCOMING'}</text>`);
+  }
+
   for (let n = 0; n < R; n++) {
     const { x, y } = pos(n);
     const u = unitAt(state, n);
@@ -108,6 +122,7 @@ function render() {
       <div class="bar ${cls}"><i style="width:${Math.min(100, (p.charge / p.capacity) * 100)}%"></i></div>
     </div>`;
 
+  renderThreats();
   renderControls();
   drainEvents();
 
@@ -116,6 +131,35 @@ function render() {
   else if (state.result === 'loss') b.innerHTML = `<div class="banner loss">You went critical with nothing left to lose. Press R.</div>`;
   else if (state.result === 'timeout') b.innerHTML = `<div class="banner timeout">Stalemate — the field ran down with enemies still standing. Press R.</div>`;
   else b.innerHTML = '';
+}
+
+// The other half of what a planning agent knows: exactly how much each target
+// still needs, and how much you can actually deliver before the turn ends.
+// EXP-034 found the real cliff is *starting* a kill that takes two actions.
+function renderThreats() {
+  const p = getPlayer(state);
+  const foes = enemies(state);
+  if (!foes.length) { $('threats').innerHTML = ''; return; }
+  const deliverable = Math.min(p.charge, p.throughput * Math.max(0, state.actionsLeft));
+  const rows = foes
+    .map((e) => ({ e, m: killMath(state, e), d: ringDist(e.node, p.node, state.config.ringSize) }))
+    .sort((a, b) => a.d - b.d)
+    .map(({ e, m, d }) => {
+      const reach = d <= 1 ? '' : ` <span style="color:#5c6b80">${d} away</span>`;
+      const verdict = m.enough
+        ? (d <= 1 ? '<b style="color:#ff5470">you can finish it this turn</b>' : '<span style="color:#8593a8">in range if you close</span>')
+        : `<span style="color:#5c6b80">short by ${m.needed - deliverable}</span>`;
+      return `<div><b>${KIND_LABEL[e.kind]}</b> ${e.charge}/${e.capacity}${isHot(state, e) ? ' <span style="color:#ffb03a">hot</span>' : ''}${reach}
+        — needs <b>${m.needed}</b> more — ${verdict}</div>`;
+    }).join('');
+  // Name whichever limit is actually binding — "4 per shove x 2 actions" reads
+  // as 8 when you are only holding 3, which is exactly the confusion this panel
+  // exists to remove.
+  const capped = p.charge < p.throughput * Math.max(0, state.actionsLeft);
+  const why = capped
+    ? `all the charge you are holding`
+    : `${p.throughput} per shove × ${state.actionsLeft} action${state.actionsLeft === 1 ? '' : 's'}`;
+  $('threats').innerHTML = `<div style="color:#8593a8;margin-bottom:6px">You can move <b style="color:#e7edf6">${deliverable}</b> charge before this turn ends — ${why}.</div>${rows}`;
 }
 
 function arc(cx, cy, r, frac) {
@@ -181,6 +225,16 @@ function previewOf(action) {
         : nowHot && !isHot(state, target) ? 'That tips it into <b>hot</b> — it will act twice.' : 'It survives, and keeps the charge.');
   }
   const pile = state.ring[n] + action.amount;
+  const incoming = state.units.filter((e) => e.alive && e.team === 'enemy' && predictNextNode(state, e) === n);
+  if (incoming.length) {
+    const e = incoming[0];
+    const lethal = e.charge + pile > e.capacity;
+    return `Put <b>${action.amount}</b> on node ${n} (pile becomes <b>${pile}</b>). ` +
+      `<b>${KIND_LABEL[e.kind]} is stepping there next turn</b> at ${e.charge}/${e.capacity} — ` +
+      (lethal
+        ? `<span class="kill">it walks in, fills past capacity and detonates</span>.`
+        : `it will fill to ${Math.min(e.capacity, e.charge + pile)}/${e.capacity}, leaving it ${e.capacity - Math.min(e.capacity, e.charge + pile) + 1} short. Add more, or tip it after.`);
+  }
   return `Put <b>${action.amount}</b> on node ${n} (pile becomes <b>${pile}</b>). ` +
     `Anything that steps there fills up from it — that is how you load a target before tipping it over. ` +
     `Leaving nothing on the floor starves them instead, which is slower but costs you nothing.` +

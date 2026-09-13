@@ -4,7 +4,7 @@
 
 import {
   legalActions, applyAction, cloneState, getPlayer, enemies,
-  ringDist, towards, isHot, mod, unitAt,
+  ringDist, towards, isHot, mod, unitAt, predictNextNode,
 } from '../sim/rules.js';
 
 function agentRng(seed) {
@@ -256,31 +256,10 @@ function optimizerAgent(seed, evalFn = evaluate, name = 'optimizer', maxDepth = 
 }
 
 // --- miner: the strategy the optimiser discovered, written down explicitly ---
-// Predicts where each enemy steps next and places a pile of *exactly* the size
-// that overloads it on arrival. Exists to answer two questions: is the
-// discovered line reliably executable (mastery), and is it dominant (rule 21)?
-
-function predictNextNode(s, e) {
-  const R = s.config.ringSize;
-  const p = getPlayer(s);
-  const hungry = s.config.hungryEnemies && e.charge < e.throughput;
-  if (e.ai === 'scavenge' || hungry) {
-    if (s.ring[e.node] > 0) return e.node; // it eats where it stands
-    let best = -1, bestScore = 0;
-    for (let n = 0; n < R; n++) {
-      if (s.ring[n] <= 0) continue;
-      const sc = s.ring[n] * 10 - ringDist(e.node, n, R);
-      if (sc > bestScore) { bestScore = sc; best = n; }
-    }
-    if (best >= 0) return mod(e.node + towards(e.node, best, R), R);
-    if (!p) return e.node;
-    return mod(e.node - towards(e.node, p.node, R), R);
-  }
-  if (!p || !p.alive) return e.node;
-  if (ringDist(e.node, p.node, R) === 1) return e.node;
-  if (e.moveEvery > 1 && s.turn % e.moveEvery !== 0) return e.node;
-  return mod(e.node + towards(e.node, p.node, R), R);
-}
+// Predicts where each enemy steps next (via the engine's own predictNextNode,
+// the same one the UI draws) and places a pile of *exactly* the size that
+// overloads it on arrival. Exists to answer two questions: is the discovered
+// line reliably executable (mastery), and is it dominant (rule 21)?
 
 function minerAgent(seed) {
   const rnd = agentRng(seed);
@@ -379,6 +358,11 @@ export const AGENTS = {
   optimizerNeutral: (seed) => optimizerAgent(seed, evaluateNeutral, 'optimizerNeutral'),
   // Same evaluation, deeper horizon — isolates search myopia from design (EXP-028).
   optimizerDeep: (seed) => optimizerAgent(seed, evaluate, 'optimizerDeep', 3),
+  // EXP-034: identical evaluation, depth varied alone, to separate "how far can
+  // this player plan" from every other difference between agents.
+  neutralD1: (seed) => optimizerAgent(seed, evaluateNeutral, 'neutralD1', 1),
+  neutralD2: (seed) => optimizerAgent(seed, evaluateNeutral, 'neutralD2', 2),
+  neutralD3: (seed) => optimizerAgent(seed, evaluateNeutral, 'neutralD3', 3),
 };
 
 export function makeAgent(name, seed) {

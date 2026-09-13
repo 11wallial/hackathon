@@ -52,7 +52,7 @@ reproducible from these commands.
 
 ## Read the notebook
 
-Start with **`docs/DISCOVERIES.md`** — eighteen principles that were *earned*,
+Start with **`docs/DISCOVERIES.md`** — twenty-one principles that were *earned*,
 each naming its evidence, including one marked **FALSIFIED** and one carrying a
 correction to its own supporting data. Then:
 
@@ -60,7 +60,7 @@ correction to its own supporting data. Then:
 |---|---|
 | `docs/PROJECT_STATE.md` | what exists, what is proven, and the top defect |
 | `docs/DESIGN_THESIS.md` | current belief + two dated revisions, with what was falsified |
-| `docs/EXPERIMENTS.md` | 30 experiments, hypotheses pre-registered before each run |
+| `docs/EXPERIMENTS.md` | 31 experiments, hypotheses pre-registered before each run |
 | `docs/GRAVEYARD.md` | eleven killed mechanics, why each failed — and one resurrection |
 | `docs/OPEN_QUESTIONS.md` | the unresolved questions, ranked |
 | `docs/NEXT_EXPERIMENTS.md` | the ranked queue |
@@ -97,6 +97,14 @@ within thirty seconds of reading a board.
 evidence that "players never approach their own overload" had an explicit
 fear-of-overload term in its evaluation. An unbiased one plays near overload
 3.6x more often. The notebook now keeps two instruments and reports both.
+
+**The difficulty cliff was one action wide.** Holding the evaluation fixed and
+varying only planning depth, `surge` goes 26.3% → 57.0% → 57.0% across depths 1,
+2 and 3. A clean step, and not because of exotic tactics: a shove delivers at
+most 4, a drone at 2/6 needs 5, and a one-move planner never *starts* a kill it
+cannot finish in one action. That is arithmetic the game already knew and wasn't
+saying, so the client now says it. The encounter that looked like the cliff
+turned out not to have one.
 
 **Four rule experiments failed where one enemy succeeded.** Making the player's
 own capacity feel like a death clock resisted four rule changes across five

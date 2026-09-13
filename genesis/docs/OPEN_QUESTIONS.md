@@ -53,7 +53,33 @@ should be relabelled as low-CCR controls rather than treated as content. We have
 therefore validated across *two* real shapes, not four. Ring sizes 8 and the
 rest of the geometry sweep are still untested.
 
-### Q7 — Is the mastery gap an accessibility cliff? *(promoted — now the top open question)*
+### Q7 — Is the skill curve a step function? — **ANSWERED, and relocated**
+
+Yes, but not where we thought. EXP-034 varied search depth alone: on `surge` the
+step is +30.7pp between depth 1 and depth 2 and +0.0pp from 2 to 3. On `press` —
+the encounter promoted here *because* it looked like a cliff — depth is worth
+only +6.3pp (D-021).
+
+The step is **one action wide**, and what it gates is committing to a kill that
+takes more than one shove (D-019). That is arithmetic the game already knows, so
+the client now shows it: how much each target still needs, how much you can
+deliver before the turn ends, and where every enemy will step next.
+
+*Residual, and it is a real one*: that fix is **unvalidated**. Every agent has
+perfect information, so no simulation can tell us whether surfacing it helps a
+human (D-020). This is the first question in the project that needs a person.
+
+### Q8 — Has self-detonation become routine? *(new, now the top open question)*
+
+On `press` the player burns out around three and a half times per run and ends
+with 7.25 of 10 capacity gone. D-005 earned burnout its place as a *dramatic
+choice* — the searching agent adopting self-immolation unprompted was one of the
+best results in the project. At this frequency it is closer to a cost of doing
+business, which would quietly undo that finding. Measure whether burnouts are
+chosen (a planned blast that kills something) or suffered (unavoidable
+overflow), and act on the answer.
+
+### Q7 (original entry, superseded by the answer above) — Is the mastery gap an accessibility cliff?
 
 `hungryEnemies` (EXP-025) cost the middle of the ladder far more than the top:
 the optimizer lost 1pp while the explicit expert policy lost 14pp on `surge` and

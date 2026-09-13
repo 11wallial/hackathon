@@ -14,28 +14,31 @@ Ranked by expected information gain per unit of implementation cost.
 >    behavioural difference (D-016).
 > 4. **Ask whether it is a content question before writing a fifth rule.**
 >    Four rule experiments failed at Q1; one archetype settled it (D-017).
+> 5. **Vary one faculty at a time.** A spread of win rates across a mixed agent
+>    panel does not localise a skill — it sent us to the wrong encounter
+>    entirely (D-021).
 
-### 1. EXP-034 — Is the skill curve a step function? *(Q7, now the top question)*
-
-EXP-030 closed Q1 and made this worse. On `press` every non-searching agent
-lands between 4.5% and 10.5% while searching agents take 39-58%. That is not a
-difficulty curve, it is a cliff at "can you plan two moves ahead", and a human
-lives on the wrong side of it.
-
-Build a graded family of intermediate agents — one-step lookahead, two-step with
-a shallow evaluation, the miner with better target selection — and plot the
-curve. If it is a step rather than a ramp, find what the searching agents know
-that the others do not, and ask whether the game can *show* it (a preview, a
-threat readout, a legibility change) rather than requiring the player to
-simulate it. This is a comprehension problem wearing a difficulty costume.
-
-### 2. EXP-033 — Has self-detonation become routine?
+### 1. EXP-036 — Has self-detonation become routine? *(Q8)*
 
 On `press` the player burns out ~3.5 times per run and ends with 7.25 of 10
-capacity gone. D-005 earned burnout its place as a *dramatic choice*; at this
-frequency it is a cost of doing business. Measure whether burnouts are chosen
-(a planned blast that kills something) or suffered (unavoidable overflow), and
-if mostly suffered, either raise the cost or give the player a real dump valve.
+capacity gone. D-005 earned burnout its place as a *dramatic choice* — the
+searching agent adopting self-immolation unprompted was one of the best results
+in the project — and at this frequency that finding is quietly being undone.
+
+Classify every player detonation as **chosen** (a blast that kills something, or
+that the agent had a safe alternative to) or **suffered** (unavoidable overflow).
+If mostly suffered, the fix is a real dump valve or a higher burnout cost, not a
+number tweak. This is the top item because it threatens an existing result
+rather than opening a new one.
+
+### 2. Human playtest — the first thing here that a simulation cannot do
+
+EXP-034 located the depth-1/depth-2 step precisely and the client now surfaces
+the arithmetic that should close it. Every agent has perfect information, so
+this fix is **unvalidated by construction** (D-020). One person playing five
+runs of `surge`, with think-aloud, would settle whether the "What it takes"
+panel changes what they attempt — and would be worth more than any further
+agent batch on this question.
 
 ### 3. EXP-031 — Re-tune `surge` against the improved agent
 

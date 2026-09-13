@@ -593,6 +593,49 @@ function aiScavenge(s, u) {
   }
 }
 
+/**
+ * Where a unit will step next, under current conditions. Single source of truth:
+ * the miner agent plans against it and the UI draws it, so what the player is
+ * shown and what a planning agent reasons about cannot diverge.
+ */
+export function predictNextNode(s, e) {
+  const R = s.config.ringSize;
+  const p = getPlayer(s);
+  const hungry = s.config.hungryEnemies && e.charge < e.throughput;
+  const scavenging = e.ai === 'scavenge' || hungry;
+
+  if (scavenging) {
+    if (s.ring[e.node] > 0 && e.charge < e.capacity) return e.node;
+    let best = -1, bestScore = 0;
+    for (let n = 0; n < R; n++) {
+      if (s.ring[n] <= 0) continue;
+      const sc = s.ring[n] * 10 - ringDist(e.node, n, R);
+      if (sc > bestScore) { bestScore = sc; best = n; }
+    }
+    if (best >= 0) return mod(e.node + towards(e.node, best, R), R);
+    if (!p) return e.node;
+    return mod(e.node - towards(e.node, p.node, R), R);
+  }
+  if (!p || !p.alive) return e.node;
+  const d = ringDist(e.node, p.node, R);
+  if (e.ai === 'lob') {
+    if (d >= e.minRange && d <= e.maxRange && e.charge > 0) return e.node; // throws instead
+    if (e.moveEvery > 1 && s.turn % e.moveEvery !== 0) return e.node;
+    return mod(e.node + (d < e.minRange ? -towards(e.node, p.node, R) : towards(e.node, p.node, R)), R);
+  }
+  if (d === 1) return e.node;
+  if (e.moveEvery > 1 && s.turn % e.moveEvery !== 0) return e.node;
+  return mod(e.node + towards(e.node, p.node, R), R);
+}
+
+/** Charge still required to overfill a unit, and what the player can deliver this turn. */
+export function killMath(s, e) {
+  const p = getPlayer(s);
+  const needed = e.capacity - e.charge + 1;
+  const deliverable = p ? Math.min(p.charge, p.throughput * Math.max(0, s.actionsLeft)) : 0;
+  return { needed, deliverable, enough: deliverable >= needed };
+}
+
 // ---------------------------------------------------------------------------
 // Termination
 // ---------------------------------------------------------------------------
