@@ -121,6 +121,29 @@ than an empty one, so the metric is not monotone and the search exploits it.
 Deepening the search from 2 to 3 actions fixed it properly (12.0% → 5.0%)
 without touching the evaluation. Fix the horizon, not the scoring.
 
+### `allowGorge` — take the pile whole, cap ignored — **KILLED** (EXP-037/038)
+
+*Intuition*: EXP-036 found that `absorbCap` had silently removed the player's
+ability to *choose* a self-detonation — the affordance D-005 was built on. Gorge
+restored it as a variant of `STEP` rather than a new verb, to respect the
+complexity budget.
+*What failed*: it cost win rate at every capacity weight tested — up to −15.3pp
+— while agents chose it 1.1-2.2 times per run. It is **attractive and wrong**:
+the evaluation sees a kill worth 120 against two capacity points, the outcome
+sees a player who is permanently smaller for the rest of the run, and nothing in
+the game signals which is right. A trap can be good design; an illegible one
+cannot.
+*Process note worth keeping*: the first measurement showed −33.5pp and we nearly
+read that as a verdict. It was confounded — no evaluation function priced the
+player's capacity at all, so the agents were Goodharting an instrument that did
+not charge them for the cost. Fixing the instrument first (EXP-038) both
+rescued the experiment and turned up a much larger finding.
+*Salvaged*: the reactive blast keeps most of the value. 85.6% of player
+detonations on `surge` kill at least one enemy, so being overfilled still hurts
+whoever overfilled you — a genuine cap on what an enemy gains by doing it.
+*Revisit if*: the game ever gains a way to make the capacity cost visible and
+recoverable, at which point choosing to detonate could become legible.
+
 ### `bomber` agent — **KILLED**
 
 A badly specified "commit to one strategy" agent: 0% win, 19% death. Its pile

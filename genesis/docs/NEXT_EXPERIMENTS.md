@@ -17,19 +17,22 @@ Ranked by expected information gain per unit of implementation cost.
 > 5. **Vary one faculty at a time.** A spread of win rates across a mixed agent
 >    panel does not localise a skill — it sent us to the wrong encounter
 >    entirely (D-021).
+> 6. **Audit the evaluation for every persistent quantity the game tracks.**
+>    If the state has it and the score does not, the agent trades it away and
+>    looks like it is telling you something about the design (D-022).
 
-### 1. EXP-036 — Has self-detonation become routine? *(Q8)*
+### 1. EXP-039 — Re-derive the difficulty of both encounters *(Q9)*
 
-On `press` the player burns out ~3.5 times per run and ends with 7.25 of 10
-capacity gone. D-005 earned burnout its place as a *dramatic choice* — the
-searching agent adopting self-immolation unprompted was one of the best results
-in the project — and at this frequency that finding is quietly being undone.
+The strongest agent now wins 97.0% on `surge` and 96.7% on `press`. Both were
+tuned against agents that treated a permanent capacity loss as free (D-022), so
+every balance number in the notebook is an underestimate of competent play.
 
-Classify every player detonation as **chosen** (a blast that kills something, or
-that the agent had a safe alternative to) or **suffered** (unavoidable overflow).
-If mostly suffered, the fix is a real dump valve or a higher burnout cost, not a
-number tweak. This is the top item because it threatens an existing result
-rather than opening a new one.
+Sweep wave size, arrival cadence, the charge enemies arrive holding, and lobber
+count, against the **corrected** instrument. Target declared in advance, as in
+EXP-030b: the strongest agent between 50% and 65%, random and the turtle both
+below 5%, and the `press` near-overload finding intact above 30%. Do not
+re-tune by taste — the last dose sweep worked because the target was written
+down first.
 
 ### 2. Human playtest — the first thing here that a simulation cannot do
 

@@ -4,7 +4,7 @@
 import { createEncounter, applyAction, isOver, totalEnergy, getPlayer } from '../sim/rules.js';
 import { makeAgent } from '../agents/index.js';
 
-const actionKey = (a) => `${a.type}:${a.dir ?? ''}:${a.amount ?? ''}`;
+const actionKey = (a) => `${a.type}${a.gorge ? '!' : ''}:${a.dir ?? ''}:${a.amount ?? ''}`;
 
 export function playOne({
   agentName, encounter = 'probe', config = {}, seed = 1,
@@ -55,9 +55,9 @@ export function aggregate(runs) {
   const n = runs.length;
   const add = (o, src) => { for (const [k, v] of Object.entries(src)) o[k] = (o[k] || 0) + v; };
 
-  const actions = {}, shoveAmounts = {}, chains = {}, shoveByBand = {}, killCause = {};
+  const actions = {}, shoveAmounts = {}, chains = {}, shoveByBand = {}, killCause = {}, pdCause = {};
   let wins = 0, timeouts = 0, losses = 0, turns = 0, detonations = 0, enemyDet = 0, selfDet = 0;
-  let baitKills = 0, tipKills = 0, starved = 0, chargeToEnemies = 0, chargeShoved = 0, motesAtEnd = 0;
+  let baitKills = 0, tipKills = 0, starved = 0, pBlastKills = 0, pBlastProd = 0, gorges = 0, chargeToEnemies = 0, chargeShoved = 0, motesAtEnd = 0;
   let nearOverload = 0, playerTurns = 0, stepChoices = 0, stepTowardMotes = 0;
   let violations = 0, overflow = 0, maxChain = 0, chainRuns = 0, distinct = 0;
   const bandTurns = [0, 0, 0, 0];
@@ -72,6 +72,8 @@ export function aggregate(runs) {
     add(shoveAmounts, st.shoveAmounts);
     add(chains, st.chains);
     add(killCause, st.killCause);
+    add(pdCause, st.playerDetonationCause);
+    pBlastKills += st.playerBlastKills; pBlastProd += st.playerBlastProductive; gorges += st.gorges;
     for (const [band, m] of Object.entries(st.shoveByBand)) {
       shoveByBand[band] = shoveByBand[band] || {};
       add(shoveByBand[band], m);
@@ -129,6 +131,10 @@ export function aggregate(runs) {
     maxChain,
     chains,
     killCause,
+    playerDetonationCause: pdCause,
+    playerBlastKills: pBlastKills,
+    playerBlastProductive: pBlastProd,
+    gorgesPerRun: gorges / n,
     motesAtEnd: motesAtEnd / n,
     stepTowardMoteRate: stepChoices ? stepTowardMotes / stepChoices : 0,
     conservationViolations: violations,

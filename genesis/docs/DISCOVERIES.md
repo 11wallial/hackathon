@@ -83,6 +83,21 @@ self-selects for skill: only an agent that can plan the blast benefits.
 > **Principle**: a failure state that still produces its physical consequence
 > can be spent deliberately. A failure state that just ends the run cannot.
 
+**Amendment, EXP-036/037/038.** The *affordance* this finding rested on was lost
+and we did not notice for three batches. `absorbCap` (EXP-014), adopted for an
+unrelated reason, made it impossible for a player to overload themselves by
+stepping onto a pile — so deliberate self-detonation stopped being reachable,
+and every player detonation since has been enemy-initiated (`floor` cause: 0.0%
+across 1,600 runs). Restoring the choice as a `STEP` variant was built, tested
+and **killed**: it cost up to 15pp of win rate.
+
+What survives is the mechanism without the choice: 85.6% of player detonations
+on `surge` still kill something, so being overfilled hurts whoever overfilled
+you. The principle stands; its instance is now reactive rather than chosen. The
+lesson for the notebook is that **a rule adopted for one reason can silently
+delete a finding recorded under another**, and nothing in the process catches
+that except re-measuring old claims.
+
 ### D-006 — Spectacle mechanics fail on arithmetic long before they fail on design
 
 **Evidence**: EXP-005 — chains occurred in 0.3-1.0% of runs, max length 2, out
@@ -361,3 +376,34 @@ depth-1 *searcher* handles the encounter fine at 53.3%.
 > **Principle**: a spread of win rates across a mixed agent panel does not
 > localise a skill. Agents differ in many ways at once; to attribute a gap to a
 > faculty, hold everything else fixed and vary that faculty alone.
+
+### D-022 — An instrument that does not price a permanent cost will spend it freely
+
+**Evidence**: EXP-038. No evaluation function in the project contained a term
+for the player's own capacity, so burning capacity was free. Adding it — weight
+swept 0/4/8/15/25/40/80, plateau at 25 — moved the strongest agent on `surge`
+from 80.3% to 96.8% and the neutral agent on `press` from 54.3% to 97.2%.
+
+The consequence is not a single bad experiment. Every difficulty figure this
+project has reported, back to v0.5, was measured against agents quietly setting
+fire to their own capacity, so **every one of them understated competent play**
+— and both encounters were tuned to a strength no real player would have.
+
+This is the third time the instrument turned out to be part of the result
+(D-016, EXP-027, and now this), and the most expensive.
+
+> **Principle**: audit the evaluation for *every persistent quantity the game
+> tracks*. If the state has it and the score does not, the agent will trade it
+> away — and will look like it is telling you something about the design.
+
+### D-023 — Fix the instrument before believing a verdict
+
+**Evidence**: gorge's first measurement was −33.5pp, which looks conclusive.
+It was confounded: the agents were being charged nothing for the cost the
+mechanic imposes. Fixing that first shrank the penalty to between −15.3pp and
+0.0pp — still a kill, but on honest grounds — and turned up D-022 on the way.
+
+> **Principle**: when a result is strikingly bad, check whether the measuring
+> apparatus can see the cost before concluding anything. The sequence matters:
+> had we killed gorge on the first number we would have been right by accident
+> and would never have found the calibration error underneath it.

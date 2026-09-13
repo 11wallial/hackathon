@@ -966,3 +966,185 @@ well-shaped fight with eight rungs, `press` is the pressure test.
   *which* information separates depth-1 from depth-2 play. Whether surfacing it
   helps a human is unmeasured, and stays unmeasured until there is a human
   playtest.
+
+---
+
+## Batch 11 — EXP-036, is burnout still a choice?
+
+### EXP-036 — Chosen or suffered?
+
+- **Context**: D-005 is one of the better findings in this project — letting the
+  player survive their own overload at a permanent capacity cost turned a
+  failure state into a *tactic*, and the searching agent adopted self-immolation
+  unprompted. On `press` the player now burns out ~3.5 times per run and ends
+  with 7.25 of 10 capacity gone. At that frequency it stops being a dramatic
+  choice and becomes a tax, which would quietly erode the original result.
+- **Question**: what actually pushes the player over capacity?
+- **The classification is already instrumented.** Every unit records the cause
+  of the charge that last entered it. For a player detonation:
+  - `floor` — the player *stepped onto* a pile knowing what was on it: **chosen**;
+  - `lob` / `shove-enemy` / `blast` — an enemy put it there: **suffered**.
+- **Hypothesis**: on `press`, more than **60%** of player detonations will be
+  suffered rather than chosen, and fewer than **30%** will kill anything. On
+  `surge` the split should be markedly less lopsided. If that holds, burnout on
+  `press` is a tax and D-005's finding is encounter-specific rather than general
+  — which is a correction to an existing result, not a new feature request.
+- **If falsified** (mostly `floor`, or mostly killing something), burnout is
+  still a choice and the high rate simply reflects a high-pressure encounter.
+  No action, and Q8 closes.
+- **Measurement**: player-detonation cause histogram and the number of enemies
+  destroyed in the same cascade, on `surge` and `press`, under both instruments.
+- **Result** (400 seeds each):
+
+  | encounter | agent | self-det/run | chosen (floor) | suffered | blast killed something |
+  |---|---|---|---|---|---|
+  | surge | optimizerDeep | 2.88 | **0.0%** | 100% | **85.6%** |
+  | surge | optimizerNeutral | 1.80 | **0.0%** | 100% | 76.6% |
+  | press | optimizerDeep | 3.32 | **0.0%** | 100% | 50.0% |
+  | press | optimizerNeutral | 3.51 | **0.0%** | 100% | 67.2% |
+
+- **Interpretation**: both halves falsified, and **the classification itself was
+  broken** — one of its two branches was unreachable and we did not notice when
+  designing it. `floor` is 0.0% everywhere because of `absorbCap` (EXP-014):
+  absorbing loose charge fills you to capacity and never past it, so the player
+  *cannot* overload themselves by stepping onto a pile. The experiment was saved
+  only by its second metric.
+
+  That second metric says the real thing: on `surge`, **85.6% of player
+  detonations kill at least one enemy** (1.02 kills per blast). The blast is
+  doing work — but reactively.
+
+  **The finding is a silent regression we caused ourselves.** D-005 earned
+  burnout its place because the searching agent adopted self-immolation as a
+  *deliberate offensive move*, and that evidence came from v0.1, where stepping
+  onto a big pile could push you over. `absorbCap` was adopted three batches
+  later for an unrelated reason (stop the board killing things without a
+  decision, D-007) and, as a side effect nobody noticed, **removed the only way
+  a player could choose to detonate**. What still carries the name is a
+  consolation prize: when an enemy overfills you, your blast hurts it back. A
+  genuine cap on what an enemy gains by overfilling you, but not a choice.
+- **Decision**: Q8's premise was wrong — burnout has not become routine, it has
+  stopped being a *decision*. **MODIFY**: test restoring deliberate
+  self-detonation as a variant of an existing verb (EXP-037). D-005 is amended
+  rather than retracted: its mechanism is sound, its affordance was lost.
+  Confidence HIGH.
+
+### EXP-037 — Restore the choice: `gorge`
+
+*(Hypothesis and kill condition written before the run; the first attempt to
+save them hit a shell quoting error, so they are transcribed here unchanged.)*
+
+- **Question**: if `absorbCap` removed the player's ability to choose a
+  detonation, is that ability worth having back?
+- **Design constraint**: the complexity budget says no new verbs, so this is a
+  *variant* of `STEP` — step onto a tile and take everything there, cap ignored
+  — not a third verb. Enemies never get it: they are the reason the floor is
+  dangerous, not the ones deciding to eat it.
+- **Hypothesis**: a **niche mastery tool**. We predict searching agents use it
+  on more than 2% of steps onto a charged tile, that it is worth less than 5pp
+  of win rate, and that shallow agents gain nothing — the same asymmetric
+  signature burnout had in EXP-003.
+- **Kill condition, declared in advance**: if agents essentially never use it,
+  or it costs win rate, it is dead weight and gets removed on the simplicity
+  test rather than kept because we built it.
+- **Measurement**: gorge usage, win-rate delta per agent, productive-blast
+  share, and whether the chosen/suffered split finally moves off 0%.
+
+- **Result, first pass** (400 seeds): agents use it heavily — 1.3-2.2 per run —
+  and it is **catastrophic**: optimizerNeutral 55.5% → 22.0% on `surge`
+  (−33.5pp), optimizerDeep 78.3% → 53.8% (−24.5pp), and on `press` −30.0pp and
+  −10.0pp. Shallow agents never touch it (0.00/run), exactly as predicted.
+  The chosen/suffered split did move: 32.8-60.1% of player detonations are now
+  deliberate.
+- **Interpretation, first pass — confounded, and we caught why before concluding
+  anything.** Neither evaluation function contains a term for the player's own
+  **capacity**. Permanent capacity loss is therefore literally free in the
+  agents' eyes, while the kill it buys is worth +120. They are not demonstrating
+  that gorge is bad; they are Goodharting an instrument that does not price the
+  cost. This is D-016 for the third time, and it would have been easy to read
+  the −33.5pp as a design verdict and kill a mechanic on it.
+- **Decision so far**: do **not** judge gorge on this run. Fix the instrument
+  first (EXP-038), then re-measure.
+
+### EXP-038 — Price the player's capacity, then re-judge gorge
+
+- **Question**: neither evaluation values the player's own capacity, so a
+  permanent capacity loss costs the agent nothing. Does pricing it change the
+  gorge verdict — and what else does it change?
+- **Why this term is legitimate**: capacity is a persistent *outcome* quantity
+  like being alive, not a tactical hint. It is the same kind of term as
+  "enemies remaining". That is the distinction EXP-027 got wrong when it added
+  a distance-to-goal heuristic, which was a hint about *how* to play.
+- **Hypothesis**: with capacity priced, gorge usage falls by at least half and
+  the win-rate penalty shrinks below 10pp; if gorge still costs win rate at
+  every weight, it is genuinely bad and gets killed per its own kill condition.
+- **Risk being watched, and it is a serious one**: pricing capacity may act as a
+  *de facto* fear-of-overload term and undo EXP-029/Q1. If the neutral agent's
+  near-overload rate on `press` falls below 15% (it is 31.8%), then the Q1
+  finding is sensitive to this choice and that must be reported, not buried.
+- **Measurement**: sweep capacity weight 0 / 4 / 8 / 15; gorge usage, win rate,
+  near-overload rate on `press`, both instruments.
+- **Result**: three separate outcomes, and the incidental one is the biggest.
+
+  **(1) The pre-registered risk did not fire.** Near-overload for the neutral
+  agent on `press` went **up**, 48.2% → 52.7%. Pricing capacity is not a
+  disguised fear term — it values a permanent outcome, where the EXP-029 term
+  feared a transient state. Q1's finding survives and strengthens.
+
+  **(2) Gorge fails its own kill condition.** With capacity priced it costs
+  −15.3pp (surge/deep), −2.7pp (surge/neutral), −1.7pp (press/deep) and −9.7pp
+  (press/neutral). Never positive. Agents still *choose* it 1.1-2.2 times per
+  run and lose win rate doing so — their evaluation says +90 (a kill at 120
+  against 2 capacity at 25 apiece is not the whole cost), the outcome says
+  otherwise. It is attractive and wrong, with no signal that it is a mistake.
+  **KILLED** per the condition declared before the run.
+
+  **(3) The incidental result dwarfs both.** Simply pricing capacity, with
+  gorge off, moved win rates enormously:
+
+  | encounter | agent | capW 0 | capW 25 |
+  |---|---|---|---|
+  | surge | optimizerDeep | 80.3% | **96.8%** |
+  | surge | optimizerNeutral | 61.7% | 88.0% |
+  | press | optimizerDeep | 51.7% | 74.8% |
+  | press | optimizerNeutral | 54.3% | **97.2%** |
+
+  A sweep to 80 found the plateau at 25, so that is the new default.
+
+- **Interpretation**: **every difficulty number this project has reported was
+  measured with an instrument that treated a permanent loss as free.** Agents
+  burned capacity for short-term gain all the way back to v0.5, and every
+  "the strongest agent wins X%" figure was an underestimate of competent play.
+  This is D-016 a third time, and the most expensive instance: it did not
+  mislead one experiment, it miscalibrated the difficulty of the whole game.
+- **Decision**: **KEEP** capacity pricing at weight 25 as the default for both
+  instruments. **KILL** gorge. Re-tune both encounters against the corrected
+  instrument — now the top queue item. Confidence HIGH.
+
+### v1.0 corrected panel (300 seeds, agents pricing capacity, gorge removed)
+
+| agent | `surge` win | `press` win | near-overload on `press` |
+|---|---|---|---|
+| random | 2.7% | 8.3% | 7.3% |
+| explorer | 2.3% | 14.0% | 6.1% |
+| conservative (turtle) | 5.0% | 9.3% | 2.1% |
+| greedy | 21.7% | 8.0% | 41.6% |
+| miner | 32.3% | 6.3% | 18.6% |
+| optimizerNeutral | 88.0% | **96.7%** | **46.4%** |
+| optimizer | 91.3% | 79.3% | 4.4% |
+| optimizerDeep | **97.0%** | 75.3% | 4.2% |
+
+Two design findings survive the correction and get stronger:
+
+- **Q1 is reconfirmed more decisively.** On `press` the agent that lives near
+  overload wins **96.7%** against 75.3% for the deeper-searching agent that
+  flinches from it — a 21pp gap, up from 5pp. Flinching from your own capacity
+  limit is not a small mistake.
+- **Q8 partly dissolves.** Self-detonations per run on `surge` fall from 2.88 to
+  2.17 for the deep agent and from 1.80 to 1.41 for the neutral one, once
+  capacity is priced. A competent player does not burn out three and a half
+  times a run; a badly-instrumented one did.
+
+And one new defect, larger than either: **both encounters are far too easy for
+competent play** (97.0% and 96.7%). Their difficulty was tuned against agents
+that were quietly setting fire to their own capacity.

@@ -52,7 +52,7 @@ reproducible from these commands.
 
 ## Read the notebook
 
-Start with **`docs/DISCOVERIES.md`** — twenty-one principles that were *earned*,
+Start with **`docs/DISCOVERIES.md`** — twenty-three principles that were *earned*,
 each naming its evidence, including one marked **FALSIFIED** and one carrying a
 correction to its own supporting data. Then:
 
@@ -60,8 +60,8 @@ correction to its own supporting data. Then:
 |---|---|
 | `docs/PROJECT_STATE.md` | what exists, what is proven, and the top defect |
 | `docs/DESIGN_THESIS.md` | current belief + two dated revisions, with what was falsified |
-| `docs/EXPERIMENTS.md` | 31 experiments, hypotheses pre-registered before each run |
-| `docs/GRAVEYARD.md` | eleven killed mechanics, why each failed — and one resurrection |
+| `docs/EXPERIMENTS.md` | 34 experiments, hypotheses pre-registered before each run |
+| `docs/GRAVEYARD.md` | twelve killed mechanics, why each failed — and one resurrection |
 | `docs/OPEN_QUESTIONS.md` | the unresolved questions, ranked |
 | `docs/NEXT_EXPERIMENTS.md` | the ranked queue |
 | `docs/MECHANIC_GENEALOGY.md` | where each mechanic came from and what it mutated into |
@@ -93,7 +93,14 @@ action on an absorb that took nothing), ~7pp search horizon, and ~5pp genuinely
 unresolvable. Neither bug is visible in any aggregate, and both were obvious
 within thirty seconds of reading a board.
 
-**The measuring instrument was part of the result.** The agent producing our
+**The measuring instrument was part of the result — three times, and the last
+one was expensive.** No evaluation function in the project priced the player's
+own *capacity*, a permanent quantity the game tracks. Agents were therefore
+burning it for free. Adding the term moved the strongest agent on one encounter
+from 80.3% to 96.8% and revealed that **every difficulty figure the project had
+reported understated competent play**, because both encounters had been tuned
+against agents quietly setting fire to themselves. The first version of that
+same story: The agent producing our
 evidence that "players never approach their own overload" had an explicit
 fear-of-overload term in its evaluation. An unbiased one plays near overload
 3.6x more often. The notebook now keeps two instruments and reports both.

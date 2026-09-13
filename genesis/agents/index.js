@@ -172,7 +172,17 @@ function bomberAgent(seed) {
 
 // --- optimiser: shallow search over this turn + the enemy response ---------
 
-function evaluate(s) {
+// Default weight on the player's capacity. EXP-038 swept 0/4/8/15/25/40/80 and
+// found the plateau here. Before this existed, every agent treated a permanent
+// capacity loss as free, which made every difficulty number in the notebook
+// an underestimate of competent play.
+export const DEFAULT_CAP_WEIGHT = 25;
+
+// capW prices the player's *capacity*: a persistent outcome quantity, like
+// being alive or an enemy being dead. Not a tactical hint — see EXP-038, and
+// contrast EXP-027's distance-to-goal term, which told the agent how to play
+// and was duly exploited.
+function evaluate(s, capW = 0) {
   if (s.result === 'win') return 10000 - s.turn * 5;
   if (s.result === 'loss' || s.result === 'timeout') return -10000;
   const p = getPlayer(s);
@@ -183,6 +193,7 @@ function evaluate(s) {
   const headroom = p.capacity - p.charge;
   score -= Math.max(0, 4 - headroom) * 25; // fear of overload
   score += Math.min(p.charge, p.capacity) * 1.5; // charge is useful
+  score += p.capacity * capW;                    // and losing capacity is forever
   for (const e of alive) {
     const d = ringDist(e.node, p.node, R);
     if (d <= 1) score -= 12;
@@ -205,13 +216,14 @@ function chargeToClear(s) {
 // distance to goal. No fear-of-overload term, no adjacency or hot penalties,
 // no hint about how to kill anything. If the findings hold under this agent
 // they are not artefacts of the evaluation function.
-function evaluateNeutral(s) {
+function evaluateNeutral(s, capW = 0) {
   if (s.result === 'win') return 10000 - s.turn * 5;
   if (s.result === 'loss' || s.result === 'timeout') return -10000;
-  return -120 * enemies(s).length - 3 * chargeToClear(s);
+  const p = getPlayer(s);
+  return -120 * enemies(s).length + (p ? p.capacity * capW : 0);
 }
 
-function optimizerAgent(seed, evalFn = evaluate, name = 'optimizer', maxDepth = 2) {
+function optimizerAgent(seed, evalFn = evaluate, name = 'optimizer', maxDepth = 2, capW = DEFAULT_CAP_WEIGHT) {
   const rnd = agentRng(seed);
   return {
     name,
@@ -234,14 +246,14 @@ function optimizerAgent(seed, evalFn = evaluate, name = 'optimizer', maxDepth = 
         if (st.result || depth === 0 || st.actionsLeft <= 0) {
           const closed = cloneState(st);
           applyAction(closed, { type: 'end' });
-          consider(evalFn(closed), first, cost);
+          consider(evalFn(closed, capW), first, cost);
           return;
         }
         for (const a of legalActions(st)) {
           if (a.type === 'end') {
             const closed = cloneState(st);
             applyAction(closed, a);
-            consider(evalFn(closed), first ?? a, cost);
+            consider(evalFn(closed, capW), first ?? a, cost);
             continue;
           }
           const next = cloneState(st);
@@ -355,9 +367,9 @@ export const AGENTS = {
   // Same search, evaluation extended with distance-to-goal (EXP-027 stage 3).
   optimizerGoal: (seed) => optimizerAgent(seed, (s) => evaluate(s) - 3 * chargeToClear(s), 'optimizerGoal'),
   // Same search, evaluation stripped to outcomes only (EXP-029 / Q4).
-  optimizerNeutral: (seed) => optimizerAgent(seed, evaluateNeutral, 'optimizerNeutral'),
+  optimizerNeutral: (seed, capW = DEFAULT_CAP_WEIGHT) => optimizerAgent(seed, evaluateNeutral, 'optimizerNeutral', 2, capW),
   // Same evaluation, deeper horizon — isolates search myopia from design (EXP-028).
-  optimizerDeep: (seed) => optimizerAgent(seed, evaluate, 'optimizerDeep', 3),
+  optimizerDeep: (seed, capW = DEFAULT_CAP_WEIGHT) => optimizerAgent(seed, evaluate, 'optimizerDeep', 3, capW),
   // EXP-034: identical evaluation, depth varied alone, to separate "how far can
   // this player plan" from every other difference between agents.
   neutralD1: (seed) => optimizerAgent(seed, evaluateNeutral, 'neutralD1', 1),
@@ -366,7 +378,10 @@ export const AGENTS = {
 };
 
 export function makeAgent(name, seed) {
-  const f = AGENTS[name];
+  // "agent@w" runs that agent with capacity weight w, so EXP-038 can sweep the
+  // instrument without forking the agent list.
+  const [base, w] = String(name).split('@');
+  const f = AGENTS[base];
   if (!f) throw new Error(`unknown agent: ${name}`);
-  return f(seed);
+  return w === undefined ? f(seed) : f(seed, Number(w));
 }

@@ -46,6 +46,12 @@ export const DEFAULT_CONFIG = {
   overloadMode: 'burnout',
   burnoutCapacityLoss: 2,
 
+  // `allowGorge` lived here. It let the player take a pile whole, cap ignored,
+  // to restore the deliberate self-detonation absorbCap had removed. It failed
+  // its own pre-declared kill condition in EXP-038 — agents chose it 1-2 times
+  // a run and lost up to 15pp of win rate doing so. Removed on the simplicity
+  // test; see GRAVEYARD.md.
+
   // Absorbing loose charge fills a unit to capacity and leaves the remainder
   // on the floor. Overload then requires a *directed* transfer — a shove or a
   // blast — so nothing dies without somebody deciding it should.

@@ -67,6 +67,10 @@ function blankStats() {
     baitKills: 0,
     tipKills: 0,
     starved: 0,
+    playerDetonationCause: {},
+    playerBlastKills: 0,
+    playerBlastProductive: 0,
+    gorges: 0,
     motesAtEnd: 0,
     deathCause: null,
     killCause: {},
@@ -218,17 +222,17 @@ function giveCharge(s, u, amount, fromBait = false, cause = 'other') {
 
 // Single entry point for taking charge off the floor, so the cap rule and the
 // bait bookkeeping cannot drift apart between the four call sites.
-function absorbFrom(s, u, node) {
+function absorbFrom(s, u, node, gorge = false) {
   const available = s.ring[node];
   if (available <= 0) return;
   let take = available;
-  if (s.config.absorbCap) take = Math.min(available, Math.max(0, u.capacity - u.charge));
+  if (s.config.absorbCap && !gorge) take = Math.min(available, Math.max(0, u.capacity - u.charge));
   if (take <= 0) return;
   const bait = u.team === 'enemy' && s.ringPlayer[node] > 0;
   s.ring[node] -= take;
   s.ringPlayer[node] = Math.max(0, s.ringPlayer[node] - Math.min(s.ringPlayer[node], take));
   u.floorFed = (u.floorFed || 0) + take;
-  giveCharge(s, u, take, bait, 'floor');
+  giveCharge(s, u, take, bait, gorge ? 'gorge' : 'floor');
 }
 
 function dropMotes(s, node, amount, playerPlaced) {
@@ -245,6 +249,8 @@ function dropMotes(s, node, amount, playerPlaced) {
  */
 function resolveOverloads(s) {
   let chain = 0;
+  let playerBlew = false;
+  let enemiesLost = 0;
   for (;;) {
     const u = s.units.find((x) => x.alive && x.charge > x.capacity);
     if (!u) break;
@@ -252,11 +258,17 @@ function resolveOverloads(s) {
       if (s.stats) s.stats.cascadeOverflow++;
       break;
     }
+    if (u.team === 'player') playerBlew = true; else enemiesLost++;
     detonate(s, u);
   }
   if (chain > 0 && s.stats) {
     s.stats.chains[chain] = (s.stats.chains[chain] || 0) + 1;
     s.stats.maxChain = Math.max(s.stats.maxChain, chain);
+    // EXP-036: did the player's own detonation take anything with it?
+    if (playerBlew) {
+      s.stats.playerBlastKills += enemiesLost;
+      if (enemiesLost > 0) s.stats.playerBlastProductive++;
+    }
   }
   return chain;
 }
@@ -277,7 +289,13 @@ function detonate(s, u) {
 
   if (s.stats) {
     s.stats.detonations++;
-    if (isPlayer) s.stats.selfDetonations++;
+    if (isPlayer) {
+      s.stats.selfDetonations++;
+      // 'floor' means the player stepped onto the pile themselves — a choice.
+      // Anything else means an enemy put the charge there.
+      const c = u.lastCause || 'other';
+      s.stats.playerDetonationCause[c] = (s.stats.playerDetonationCause[c] || 0) + 1;
+    }
     else {
       s.stats.enemyDetonations++;
       if (u.killedByBait) s.stats.baitKills++;
@@ -328,7 +346,8 @@ export function legalActions(s) {
 
   for (const dir of [-1, 1]) {
     const n = mod(p.node + dir, s.config.ringSize);
-    if (!unitAt(s, n)) acts.push({ type: 'step', dir });
+    if (unitAt(s, n)) continue;
+    acts.push({ type: 'step', dir });
   }
   const staggered = s.config.staggerOnShove && p.staggeredTurn === s.turn;
   const maxAmt = staggered ? 0 : Math.min(p.throughput, p.charge);
@@ -370,7 +389,8 @@ export function applyAction(s, action) {
     }
     p.node = n;
     emit(s, { type: 'step', id: p.id, node: n, dir: action.dir });
-    if (s.config.absorbOnStep) absorbFrom(s, p, n);
+    if (s.config.absorbOnStep) absorbFrom(s, p, n, !!action.gorge);
+    if (s.stats && action.gorge) s.stats.gorges++;
   } else if (action.type === 'shove') {
     const amount = Math.min(action.amount, p.charge, p.throughput);
     if (amount <= 0) return s;

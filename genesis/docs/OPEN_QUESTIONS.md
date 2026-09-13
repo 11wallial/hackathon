@@ -69,7 +69,27 @@ deliver before the turn ends, and where every enemy will step next.
 perfect information, so no simulation can tell us whether surfacing it helps a
 human (D-020). This is the first question in the project that needs a person.
 
-### Q8 — Has self-detonation become routine? *(new, now the top open question)*
+### Q8 — Has self-detonation become routine? — **ANSWERED: the premise was wrong**
+
+Not routine — *gone*. EXP-036 found the player cannot choose to overload at all:
+`absorbCap` removed the only route (`floor` cause is 0.0% across 1,600 runs), so
+every player detonation is enemy-initiated. Restoring the choice as a `STEP`
+variant was built and killed on its own pre-declared condition (EXP-037/038).
+And the frequency that prompted the question was itself an instrument artefact:
+once agents price their own capacity, self-detonations on `surge` fall from 2.88
+to 2.17 per run. A competent player does not burn out three and a half times;
+a badly-instrumented one did.
+
+### Q9 — What is the real difficulty of these encounters? *(new, now the top open question)*
+
+Both encounters are tuned to a strength no competent player has. With agents
+pricing their own capacity, `surge` falls to the strongest agent 97.0% of the
+time and `press` 96.7%. Every balance decision in the notebook was derived
+against agents that treated a permanent loss as free (D-022), so this is not a
+tuning pass — it is re-deriving the calibration of the whole game against an
+instrument that works.
+
+### Q8 (original entry, superseded)
 
 On `press` the player burns out around three and a half times per run and ends
 with 7.25 of 10 capacity gone. D-005 earned burnout its place as a *dramatic

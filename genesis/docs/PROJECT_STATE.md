@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v0.9 prototype
+## The game — **OVERLOAD**, v1.0 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -31,33 +31,32 @@ measurement cannot drift apart.
 
 ## Status by evidence
 
-Panel on 400 shared seeds, encounter `surge`, v0.7 defaults:
+Panel on 300 shared seeds, v1.0 defaults. **Agents now price their own
+capacity** (EXP-038); every figure reported before v1.0 was measured with an
+instrument that treated a permanent capacity loss as free, and therefore
+understated competent play.
 
-| agent | win | loss | timeout |
+| agent | `surge` win | `press` win | near-overload on `press` |
 |---|---|---|---|
-| random | 2.3% | 4.5% | 93.3% |
-| explorer | 3.3% | 5.5% | 91.3% |
-| conservative (turtle) | 6.0% | 34.3% | 59.8% |
-| greedy | 23.0% | 67.3% | 9.8% |
-| miner (explicit expert policy) | 28.2% | 29.0% | 42.8% |
-| optimizerNeutral (unbiased evaluation) | 55.5% | 8.5% | 36.0% |
-| optimizer (2-ply search) | 78.0% | 11.8% | 10.3% |
-| **optimizerDeep** (3-ply search) | **78.3%** | 15.5% | **6.3%** |
-
-Eight distinct rungs. Two instruments with different evaluation functions are
-kept permanently in the panel, because EXP-029 showed a single one is not a
-neutral window onto the game (D-016).
+| random | 2.7% | 8.3% | 7.3% |
+| explorer | 2.3% | 14.0% | 6.1% |
+| conservative (turtle) | 5.0% | 9.3% | 2.1% |
+| greedy | 21.7% | 8.0% | 41.6% |
+| miner (explicit expert policy) | 32.3% | 6.3% | 18.6% |
+| optimizerNeutral (unbiased evaluation) | 88.0% | **96.7%** | **46.4%** |
+| optimizer (2-ply) | 91.3% | 79.3% | 4.4% |
+| optimizerDeep (3-ply) | **97.0%** | 75.3% | 4.2% |
 
 | Claim | Evidence | Confidence |
 |---|---|---|
-| Skill decides outcomes | optimizer 61.5% vs random 2.0% on 400 shared seeds; six distinct rungs | HIGH |
+| Skill decides outcomes | 97.0% vs 2.7% on shared seeds | HIGH |
 | No degenerate economy is possible | conservation holds exactly across ~10^4 encounters | HIGH |
-| The board does not play itself | kill causes are player shove / blast / starvation; 0% ambient floor | HIGH |
-| Depth is not reducible to a rule | hand-written expert policy reaches 17.0%, search reaches 61.5% | MEDIUM |
-| Chains are real emergence | 98.8% of optimizer runs contain one; max length 6 | MEDIUM |
-| Findings replicate across shapes | validated on `surge`, `swarm` and `press`; two encounters are low-CCR controls | MEDIUM |
-| The skill step is one action wide | depth 1 → 2 is +30.7pp on `surge`, depth 2 → 3 is +0.0pp, evaluation held fixed | HIGH |
-| Charge is a felt *death clock* | **demonstrated** on `press`: the agent without a fear-of-overload term beats the one with it, 57.8% vs 52.5%, while spending 31.8% of turns near overload vs 5.9% | MEDIUM-HIGH |
+| The board does not play itself | kills are player shove / blast / starvation; 0% ambient floor | HIGH |
+| Depth is not reducible to a rule | explicit expert policy 32.3%, search 97.0% | MEDIUM |
+| The skill step is one action wide | depth 1 → 2 is +30.7pp on `surge`, 2 → 3 is +0.0pp | HIGH |
+| Charge is a felt *death clock* | on `press` the agent that lives near overload wins **96.7%** against 75.3% for the deeper-searching agent that flinches | HIGH |
+| Chains are real emergence | 99%+ of strong-play runs contain one; max length 6 | MEDIUM |
+| Findings replicate across shapes | validated on `surge`, `swarm`, `press` | MEDIUM |
 
 ## The deadlock, fully decomposed
 
@@ -76,20 +75,20 @@ agent myopia. See D-015.
 
 ## Known defects
 
-1. **~5% of encounters are genuinely unresolvable.** Down from 40.8%. This is
-   now a small enough residual that it is not the highest-value target.
-2. **The strongest agent wins 78%**, which may mean `surge` is now too easy for
-   competent play. Watch item, not yet acted on — the agent got much better
-   this batch and the encounter has not been re-tuned against it.
-3. **Self-detonation may be becoming routine** (Q8, top open question). On
-   `press` the player burns out ~3.5 times per run and ends with 7.25 of 10
-   capacity gone. D-005 earned burnout its place as a dramatic *choice*; at this
-   rate it is a cost of doing business, which would quietly undo that finding.
-4. **The legibility fix for the depth-1/depth-2 step is unvalidated.** EXP-034
-   located the gap precisely and the client now surfaces the arithmetic that
-   closes it — but agents have perfect information, so no simulation can say
-   whether it helps a person (D-020). This is the first thing here that needs a
-   human playtest.
+1. **Both encounters are far too easy for competent play** — 97.0% and 96.7%.
+   This is now the top defect by a distance. Their difficulty was tuned against
+   agents that were quietly setting fire to their own capacity (D-022), so every
+   balance decision in the notebook needs re-deriving against the corrected
+   instrument.
+2. **The legibility fix for the depth-1/depth-2 step is unvalidated.** EXP-034
+   located the gap precisely and the client surfaces the arithmetic that closes
+   it — but agents have perfect information, so no simulation can say whether it
+   helps a person (D-020). Needs a human.
+3. **~5% of encounters are genuinely unresolvable.** Down from 40.8%; small
+   enough that it is not the highest-value target.
+4. **Deliberate self-detonation is gone and is not coming back cheaply.**
+   `absorbCap` removed the affordance (EXP-036); restoring it was built, tested
+   and killed (EXP-037/038). D-005's mechanism survives reactively.
 
 ## The lab
 
