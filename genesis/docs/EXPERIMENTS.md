@@ -1148,3 +1148,85 @@ Two design findings survive the correction and get stronger:
 And one new defect, larger than either: **both encounters are far too easy for
 competent play** (97.0% and 96.7%). Their difficulty was tuned against agents
 that were quietly setting fire to their own capacity.
+
+---
+
+## Batch 12 — EXP-039, re-deriving difficulty against a working instrument
+
+### EXP-039 — Both encounters are tuned to a strength no player has
+
+- **Context**: D-022. Every balance decision in this notebook was derived
+  against agents that treated a permanent capacity loss as free. With capacity
+  priced, the strongest agent takes `surge` 97.0% of the time and `press` 96.7%.
+- **Target, declared before any sweeping** (the EXP-030b discipline — that dose
+  sweep worked because the target was written down first):
+  1. strongest agent between **50% and 65%**;
+  2. **random and the turtle both below 5%** — the D-007 canary, so the board is
+     still not playing itself;
+  3. on `press`, the near-overload finding intact: neutral agent above **30%**;
+  4. and a constraint the earlier sweeps did not have — the **skill ladder must
+     stay monotone**, since EXP-030 produced an encounter that hit its numbers
+     while scrambling the middle of the panel.
+- **What is swept**: wave cadence, units per wave, and the charge enemies arrive
+  holding — content, not rules. A difficulty problem should be fixed where the
+  difficulty lives.
+- **Hypothesis**: cadence will dominate. Arrival charge is double-edged in this
+  game (fuller enemies are more dangerous *and* more brittle, D-012), so we
+  predict raising it does less than it looks like it should, and that the
+  workable setting is mostly "more bodies, arriving sooner".
+- **Result**: the hypothesis is falsified twice, once in each direction.
+
+  **Body count dominates, not cadence.** Holding cadence at 4 and adding two
+  units per wave took the strongest agent from 98% to 77%; holding units and
+  halving the cadence (4 → 2) only reached 89%.
+
+  **Arrival charge is not merely weak — it is actively harmful.** Raising it 30%
+  took the turtle agent from 3% to **53%** and random from 0% to 10%. Fuller
+  enemies are hot, act twice, and detonate each other without the player
+  involved. This is the same failure as the killed floor-scattered wave charge:
+  *charge the player did not place arms the board against itself, and that
+  rewards passivity.* We predicted this dial would underdeliver; it backfires.
+
+  **A flaw in our own scoring function, caught mid-experiment.** The first
+  ladder check only compared the middle of the panel to *random*, which passes
+  trivially once random sits at 0% — it would have signed off on a setting where
+  the turtle outranked the expert policy. It also used `miner` and `greedy` as
+  the middle rungs, which D-021 already said is wrong: they are hand-written
+  policies, not medium-skill players. Replaced with a **depth-1 searcher using
+  the same evaluation as the strong agent** — someone who plays well but does
+  not plan two moves ahead — and required to sit clearly above the floor and
+  below the ceiling.
+
+  **Adopted**: `surge` at cadence 3 with three extra bodies per wave; `press` at
+  five lobbers. And note what that second one means: **EXP-030b rejected five
+  lobbers as unsurvivable** (strongest agent 3%). The same content is now the
+  right answer at 63%. Nothing about the encounter changed — the instrument did.
+  That is D-022 made concrete.
+
+### v1.1 panel (300 seeds, re-derived encounters, agents pricing capacity)
+
+| agent | `surge` | `press` | near-overload (`press`) |
+|---|---|---|---|
+| random | 0.3% | 0.7% | 9.3% |
+| explorer | 0.3% | 1.0% | 8.7% |
+| miner | 1.0% | 1.7% | 18.1% |
+| conservative (turtle) | 2.3% | 2.7% | 2.3% |
+| greedy | 8.0% | 12.0% | 41.0% |
+| neutralD1 (plays well, plans one move) | 18.7% | 32.3% | 49.1% |
+| optimizerDeep (3-ply, fears overload) | 31.0% | 23.7% | 5.6% |
+| **optimizerNeutral** (2-ply, unbiased) | **62.7%** | **60.3%** | **54.2%** |
+
+- **Interpretation**: both encounters now sit in the target band with a genuine
+  ramp rather than a step — on `surge`, 0.3 / 2.3 / 8.0 / 18.7 / 31.0 / 62.7.
+  Q1 is reconfirmed a third time and more starkly than ever: the unbiased agent
+  beats the *deeper-searching* one by 32pp on `surge` and 37pp on `press`, while
+  spending 40-54% of turns near overload against 5.6-10.6%. Under real pressure,
+  fearing your own capacity is close to fatal.
+
+  **One honest casualty**: `miner` has collapsed to 1.0-1.7%. It encodes a
+  v0.1-era strategy and has not kept up with six versions of rules changes. It
+  is no longer a useful "competent human" proxy and should be read as a historical
+  baseline; `neutralD1` is the middle rung now.
+- **Decision**: **KEEP** both re-derived encounters. Confidence HIGH on the
+  calibration, MEDIUM on whether the target band itself is the right taste call
+  — that is a judgement no simulation settles.

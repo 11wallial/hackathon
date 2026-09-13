@@ -20,28 +20,33 @@ Ranked by expected information gain per unit of implementation cost.
 > 6. **Audit the evaluation for every persistent quantity the game tracks.**
 >    If the state has it and the score does not, the agent trades it away and
 >    looks like it is telling you something about the design (D-022).
+> 7. **Ask what the do-nothing agent scores.** A turtle is the cheapest exploit
+>    detector in the panel and has caught three separate mechanics that looked
+>    fine on the win rates of agents that were trying (D-024).
 
-### 1. EXP-039 — Re-derive the difficulty of both encounters *(Q9)*
+### 1. Human playtest — the first thing here a simulation cannot do
 
-The strongest agent now wins 97.0% on `surge` and 96.7% on `press`. Both were
-tuned against agents that treated a permanent capacity loss as free (D-022), so
-every balance number in the notebook is an underestimate of competent play.
+Two results now sit on the notebook's critical path and neither can be settled
+by an agent:
 
-Sweep wave size, arrival cadence, the charge enemies arrive holding, and lobber
-count, against the **corrected** instrument. Target declared in advance, as in
-EXP-030b: the strongest agent between 50% and 65%, random and the turtle both
-below 5%, and the `press` near-overload finding intact above 30%. Do not
-re-tune by taste — the last dose sweep worked because the target was written
-down first.
+- the depth-1/depth-2 legibility fix (EXP-034) is **unvalidated by
+  construction** — every agent has perfect information, so no simulation can say
+  whether the "What it takes" panel changes what a person attempts (D-020);
+- the 50-65% target band adopted in EXP-039 is a **taste call**, honest only in
+  that it was declared before sweeping.
 
-### 2. Human playtest — the first thing here that a simulation cannot do
+One person, five runs of `surge` and five of `press`, thinking aloud, would
+settle both and is worth more than any further agent batch.
 
-EXP-034 located the depth-1/depth-2 step precisely and the client now surfaces
-the arithmetic that should close it. Every agent has perfect information, so
-this fix is **unvalidated by construction** (D-020). One person playing five
-runs of `surge`, with think-aloud, would settle whether the "What it takes"
-panel changes what they attempt — and would be worth more than any further
-agent batch on this question.
+### 2. EXP-040 — Re-run the graveyard against the corrected instrument
+
+D-025: a rejection is a measurement, and measurements inherit the flaws of the
+apparatus. Five lobbers were rejected as unsurvivable and are now the adopted
+setting. At least three other graveyard entries were killed against agents that
+priced capacity at zero — `spillFraction`, `staggerOnShove`, and the outward
+blast split — and each was killed on a win-rate delta that the same correction
+could move. Re-run them. Cheap, and the graveyard already records what each one
+needs to be re-examined.
 
 ### 3. EXP-031 — Re-tune `surge` against the improved agent
 

@@ -17,6 +17,21 @@ enemy bodies** (encounter `surge`) kept the ramp and killed the exploit — and
 gave a better curve, since late enemies arrive hot *and* brittle.
 *Revisit if*: absorption is ever made deliberate rather than automatic.
 
+### Raising the charge enemies *arrive* holding — **KILLED** (EXP-039)
+
+*Intuition*: the encounters were too easy, and enemies arriving fuller are both
+more dangerous (hot units act twice) and more brittle. It looked like a clean
+difficulty dial.
+*What failed*: a 30% increase took the do-nothing turtle agent from 3% to
+**53%** and random from 0% to 10%. Enemies that arrive nearly full detonate each
+other without the player involved, so the encounter solves itself.
+*The pattern this belongs to*: it is the third time the same failure has
+appeared — floor-scattered wave charge (killed), dissolution on drone-only
+`swarm` (fixed by hungry enemies), and now this. **Charge the player did not
+place arms the board against itself, and that rewards passivity.** Worth
+treating as a standing check on any new dial that adds charge.
+*Salvaged*: body count is the dial that works. It dominated cadence too.
+
 ### `hungryEnemies` — spent chasers forage — **KILLED (EXP-007), then RESURRECTED (EXP-025)**
 
 > **Status: alive again, unchanged, and now a default.** See the note at the end

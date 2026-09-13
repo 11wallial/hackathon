@@ -46,20 +46,25 @@ export const ENCOUNTERS = {
     ],
   },
 
-  // v0.4 escalation. Charge enters the encounter *inside bodies*, never on the
-  // floor: the only way loose charge exists is because somebody put it there.
-  // Later waves arrive progressively fuller, which makes them simultaneously
-  // more dangerous (hot units act twice) and more brittle (a small shove tips
-  // them over). Late game is fast and explosive rather than spongy.
+  // Charge enters the encounter *inside bodies*, never on the floor: the only
+  // loose charge is charge somebody put there. Later waves arrive progressively
+  // fuller, which makes them more dangerous (hot units act twice) and more
+  // brittle (a small shove tips them over) at the same time.
+  //
+  // Wave size and cadence re-derived in EXP-039 against agents that price their
+  // own capacity. The previous settings were tuned against agents that treated
+  // a permanent capacity loss as free, and the strongest agent beat them 97% of
+  // the time. Body count turned out to dominate cadence, and raising the charge
+  // enemies *arrive* holding was actively harmful — see the graveyard.
   surge: {
     name: 'surge',
     waves: [
-      { turn: 1,  units: [{ kind: 'drone' }, { kind: 'drone' }] },
-      { turn: 5,  units: [{ kind: 'siphon', charge: 6 }] },
-      { turn: 9,  units: [{ kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }] },
-      { turn: 13, units: [{ kind: 'warden', charge: 8 }] },
-      { turn: 17, units: [{ kind: 'drone', charge: 5 }, { kind: 'siphon', charge: 9 }] },
-      { turn: 21, units: [{ kind: 'warden', charge: 9 }, { kind: 'drone', charge: 5 }] },
+      { turn: 1, units: [{ kind: 'drone' }, { kind: 'drone' }, { kind: 'drone' }, { kind: 'drone' }, { kind: 'drone' }] },
+      { turn: 4, units: [{ kind: 'siphon', charge: 6 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }] },
+      { turn: 7, units: [{ kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }] },
+      { turn: 10, units: [{ kind: 'warden', charge: 8 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }] },
+      { turn: 13, units: [{ kind: 'drone', charge: 5 }, { kind: 'siphon', charge: 9 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }] },
+      { turn: 16, units: [{ kind: 'warden', charge: 9 }, { kind: 'drone', charge: 5 }, { kind: 'warden', charge: 9 }, { kind: 'warden', charge: 9 }, { kind: 'warden', charge: 9 }] },
     ],
   },
 
@@ -82,17 +87,19 @@ export const ENCOUNTERS = {
   // EXP-030. Built to force-feed: lobbers push charge into the player from
   // outside melee range, chasers pin, and the charge the player dumps to
   // survive is picked back up by hungry enemies and thrown again.
-  // Dosage selected by the EXP-030b sweep against a target declared before
-  // running (strong agent losing 25-45%, danger band still occupied). Five
-  // lobbers killed everything; three at charge 6 is a fight.
+  // Five lobbers, re-derived in EXP-039. EXP-030b had *rejected* five as
+  // unsurvivable — the strongest agent won 3% — but that was measured before
+  // agents priced their own capacity. With a working instrument the same
+  // content is the right answer at 63%. Nothing about the encounter changed;
+  // the thing measuring it did.
   press: {
     name: 'press',
     waves: [
-      { turn: 1,  units: [{ kind: 'drone' }, { kind: 'lobber', charge: 6 }] },
-      { turn: 5,  units: [{ kind: 'drone', charge: 4 }, { kind: 'lobber', charge: 6 }] },
-      { turn: 9,  units: [{ kind: 'warden', charge: 8 }, { kind: 'lobber', charge: 6 }] },
-      { turn: 13, units: [{ kind: 'drone', charge: 5 }] },
-      { turn: 17, units: [{ kind: 'drone', charge: 5 }] },
+      { turn: 1, units: [{ kind: 'lobber', charge: 6 }, { kind: 'drone', charge: 3 }] },
+      { turn: 5, units: [{ kind: 'lobber', charge: 6 }, { kind: 'drone', charge: 4 }] },
+      { turn: 9, units: [{ kind: 'lobber', charge: 6 }, { kind: 'warden', charge: 8 }] },
+      { turn: 13, units: [{ kind: 'lobber', charge: 6 }, { kind: 'drone', charge: 6 }] },
+      { turn: 17, units: [{ kind: 'lobber', charge: 6 }, { kind: 'drone', charge: 7 }] },
     ],
   },
 

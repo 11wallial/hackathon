@@ -16,8 +16,8 @@ const KIND_HINT = {
 };
 
 const ENCOUNTERS = {
-  surge: ['Surge', 'The standard fight. Waves arrive progressively fuller, so late enemies are dangerous and brittle at the same time.'],
-  press: ['Press', 'The pressure test. Lobbers force charge into you from range; you will be full more often than you would like.'],
+  surge: ['Surge', 'The standard fight. Waves arrive progressively fuller, so late enemies are dangerous and brittle at the same time. Hard: strong play clears it about six times in ten.'],
+  press: ['Press', 'Lobbers force charge into you from outside melee range. Being nearly full is where this one is won — flinching from your own capacity loses more often than it saves you.'],
 };
 let encounterId = 'surge';
 
@@ -144,6 +144,9 @@ function renderThreats() {
   const rows = foes
     .map((e) => ({ e, m: killMath(state, e), d: ringDist(e.node, p.node, state.config.ringSize) }))
     .sort((a, b) => a.d - b.d)
+    // The re-derived encounters run eleven bodies at once; an eleven-row readout
+    // is noise, not legibility. Nearest five, then a count.
+    .slice(0, 5)
     .map(({ e, m, d }) => {
       const reach = d <= 1 ? '' : ` <span style="color:#5c6b80">${d} away</span>`;
       const verdict = m.enough
@@ -159,7 +162,9 @@ function renderThreats() {
   const why = capped
     ? `all the charge you are holding`
     : `${p.throughput} per shove × ${state.actionsLeft} action${state.actionsLeft === 1 ? '' : 's'}`;
-  $('threats').innerHTML = `<div style="color:#8593a8;margin-bottom:6px">You can move <b style="color:#e7edf6">${deliverable}</b> charge before this turn ends — ${why}.</div>${rows}`;
+  const hidden = foes.length - 5;
+  const more = hidden > 0 ? `<div style="color:#5c6b80;margin-top:6px">and ${hidden} further away</div>` : '';
+  $('threats').innerHTML = `<div style="color:#8593a8;margin-bottom:6px">You can move <b style="color:#e7edf6">${deliverable}</b> charge before this turn ends — ${why}.</div>${rows}${more}`;
 }
 
 function arc(cx, cy, r, frac) {

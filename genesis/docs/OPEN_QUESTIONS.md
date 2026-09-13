@@ -80,7 +80,18 @@ once agents price their own capacity, self-detonations on `surge` fall from 2.88
 to 2.17 per run. A competent player does not burn out three and a half times;
 a badly-instrumented one did.
 
-### Q9 — What is the real difficulty of these encounters? *(new, now the top open question)*
+### Q9 — What is the real difficulty of these encounters? — **ANSWERED** (EXP-039)
+
+Re-derived against the corrected instrument: `surge` at cadence 3 with three
+extra bodies per wave, `press` at five lobbers. The strongest agent now clears
+them 62.7% and 60.3% of the time, with random and the turtle both under 3% and a
+genuine ramp in between. Body count dominated cadence, and raising the charge
+enemies *arrive* holding turned out to be actively harmful (D-024).
+
+*Residual*: the 50-65% target band was declared in advance, which makes the
+tuning honest but does not make the band correct. That is a taste call.
+
+### Q9 (original entry, superseded)
 
 Both encounters are tuned to a strength no competent player has. With agents
 pricing their own capacity, `surge` falls to the strongest agent 97.0% of the

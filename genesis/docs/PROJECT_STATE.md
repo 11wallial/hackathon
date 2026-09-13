@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v1.0 prototype
+## The game — **OVERLOAD**, v1.1 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -31,30 +31,37 @@ measurement cannot drift apart.
 
 ## Status by evidence
 
-Panel on 300 shared seeds, v1.0 defaults. **Agents now price their own
-capacity** (EXP-038); every figure reported before v1.0 was measured with an
-instrument that treated a permanent capacity loss as free, and therefore
-understated competent play.
+Panel on 300 shared seeds, v1.1 defaults. Agents price their own capacity
+(EXP-038) and both encounters were re-derived against that corrected instrument
+(EXP-039). Figures reported before v1.0 understated competent play.
 
-| agent | `surge` win | `press` win | near-overload on `press` |
+| agent | `surge` | `press` | near-overload (`press`) |
 |---|---|---|---|
-| random | 2.7% | 8.3% | 7.3% |
-| explorer | 2.3% | 14.0% | 6.1% |
-| conservative (turtle) | 5.0% | 9.3% | 2.1% |
-| greedy | 21.7% | 8.0% | 41.6% |
-| miner (explicit expert policy) | 32.3% | 6.3% | 18.6% |
-| optimizerNeutral (unbiased evaluation) | 88.0% | **96.7%** | **46.4%** |
-| optimizer (2-ply) | 91.3% | 79.3% | 4.4% |
-| optimizerDeep (3-ply) | **97.0%** | 75.3% | 4.2% |
+| random | 0.3% | 0.7% | 9.3% |
+| explorer | 0.3% | 1.0% | 8.7% |
+| miner (historical baseline, see below) | 1.0% | 1.7% | 18.1% |
+| conservative (turtle) | 2.3% | 2.7% | 2.3% |
+| greedy | 8.0% | 12.0% | 41.0% |
+| neutralD1 (plays well, plans one move) | 18.7% | 32.3% | 49.1% |
+| optimizerDeep (3-ply, fears overload) | 31.0% | 23.7% | 5.6% |
+| **optimizerNeutral** (2-ply, unbiased) | **62.7%** | **60.3%** | **54.2%** |
+
+A genuine ramp rather than a step: on `surge`, 0.3 / 2.3 / 8.0 / 18.7 / 31.0 /
+62.7. Two instruments with different evaluations are kept permanently, because
+a single one is not a neutral window onto the game (D-016).
+
+`miner` has collapsed to ~1%: it encodes a v0.1-era strategy and has not kept up
+with six versions of rules changes. Read it as a historical baseline, not as a
+competent-human proxy — `neutralD1` is the middle rung now.
 
 | Claim | Evidence | Confidence |
 |---|---|---|
-| Skill decides outcomes | 97.0% vs 2.7% on shared seeds | HIGH |
+| Skill decides outcomes | 62.7% vs 0.3% on shared seeds, with four distinct rungs between | HIGH |
 | No degenerate economy is possible | conservation holds exactly across ~10^4 encounters | HIGH |
 | The board does not play itself | kills are player shove / blast / starvation; 0% ambient floor | HIGH |
 | Depth is not reducible to a rule | explicit expert policy 32.3%, search 97.0% | MEDIUM |
 | The skill step is one action wide | depth 1 → 2 is +30.7pp on `surge`, 2 → 3 is +0.0pp | HIGH |
-| Charge is a felt *death clock* | on `press` the agent that lives near overload wins **96.7%** against 75.3% for the deeper-searching agent that flinches | HIGH |
+| Charge is a felt *death clock* | the unbiased agent beats the **deeper-searching** one by 32pp on `surge` and 37pp on `press`, while spending 40-54% of turns near overload against 5.6-10.6% | HIGH |
 | Chains are real emergence | 99%+ of strong-play runs contain one; max length 6 | MEDIUM |
 | Findings replicate across shapes | validated on `surge`, `swarm`, `press` | MEDIUM |
 
@@ -75,20 +82,18 @@ agent myopia. See D-015.
 
 ## Known defects
 
-1. **Both encounters are far too easy for competent play** — 97.0% and 96.7%.
-   This is now the top defect by a distance. Their difficulty was tuned against
-   agents that were quietly setting fire to their own capacity (D-022), so every
-   balance decision in the notebook needs re-deriving against the corrected
-   instrument.
-2. **The legibility fix for the depth-1/depth-2 step is unvalidated.** EXP-034
+1. **The legibility fix for the depth-1/depth-2 step is unvalidated.** EXP-034
    located the gap precisely and the client surfaces the arithmetic that closes
    it — but agents have perfect information, so no simulation can say whether it
    helps a person (D-020). Needs a human.
-3. **~5% of encounters are genuinely unresolvable.** Down from 40.8%; small
+2. **~5% of encounters are genuinely unresolvable.** Down from 40.8%; small
    enough that it is not the highest-value target.
-4. **Deliberate self-detonation is gone and is not coming back cheaply.**
+3. **Deliberate self-detonation is gone and is not coming back cheaply.**
    `absorbCap` removed the affordance (EXP-036); restoring it was built, tested
    and killed (EXP-037/038). D-005's mechanism survives reactively.
+4. **The target difficulty band is a taste call, not a measurement.** EXP-039
+   hit 50-65% for the strongest agent because that band was written down first.
+   Whether it is the *right* band is a judgement no simulation settles.
 
 ## The lab
 

@@ -407,3 +407,37 @@ mechanic imposes. Fixing that first shrank the penalty to between −15.3pp and
 > apparatus can see the cost before concluding anything. The sequence matters:
 > had we killed gorge on the first number we would have been right by accident
 > and would never have found the calibration error underneath it.
+
+### D-024 — Charge the player did not place arms the board against itself
+
+**Evidence**: three independent occurrences. Floor-scattered wave charge took
+the turtle agent to 73% and was killed. Dissolution on drone-only `swarm` took it
+to 99%. Raising the charge enemies *arrive* holding (EXP-039) took it from 3% to
+**53%**, with random at 10%.
+
+Every time charge enters the encounter without the player deciding where it
+goes, it ends up doing the player's job — enemies walk into it, or detonate each
+other with it — and the optimal response drifts toward passivity. The fix has
+been different each time (inject inside bodies; make foragers refill; use body
+count instead of arrival charge) but the diagnosis has been identical.
+
+> **Principle**: in a game where the environment can kill, audit every source of
+> environmental power by asking what the *do-nothing* strategy scores. A turtle
+> agent is the cheapest exploit detector in the panel, and it has caught three
+> separate mechanics here that looked fine on the win rates of agents that were
+> actually trying.
+
+### D-025 — Re-derive old rejections when the instrument changes
+
+**Evidence**: EXP-030b tested five lobbers and rejected them as unsurvivable —
+the strongest agent won 3%. EXP-039 adopted exactly five lobbers, at 63%. The
+content was identical; only the agents' evaluation had been fixed (D-022).
+
+A rejection is a measurement, and measurements inherit every flaw of the
+apparatus that produced them. This project has now had one mechanic resurrected
+because its *preconditions* changed (D-013, `hungryEnemies`) and one because the
+*instrument* changed. Both were sitting in the graveyard with enough detail to
+be re-examined, which is the entire argument for keeping one.
+
+> **Principle**: when you fix an instrument, re-run the rejections, not just the
+> open questions. The graveyard is a list of results that may no longer hold.

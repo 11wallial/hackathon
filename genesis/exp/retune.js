@@ -1,0 +1,67 @@
+// EXP-039. Generates encounter variants and scores them against a target that
+// was written into docs/EXPERIMENTS.md before this file existed.
+import { sweep } from './runner.js';
+
+const ramp = (i, boost) => Math.round(i * boost);
+
+// `surge`-family: waves of mixed bodies arriving progressively fuller.
+export const surgeGen = ({ cadence = 4, extra = 0, boost = 1 }) => ({
+  name: `surge-c${cadence}-x${extra}-b${boost}`,
+  waves: [
+    { turn: 1, units: [{ kind: 'drone' }, { kind: 'drone' }, ...Array(extra).fill({ kind: 'drone' })] },
+    { turn: 1 + cadence, units: [{ kind: 'siphon', charge: ramp(6, boost) }, ...Array(extra).fill({ kind: 'drone', charge: ramp(3, boost) })] },
+    { turn: 1 + cadence * 2, units: [{ kind: 'drone', charge: ramp(4, boost) }, { kind: 'drone', charge: ramp(4, boost) }, ...Array(extra).fill({ kind: 'drone', charge: ramp(4, boost) })] },
+    { turn: 1 + cadence * 3, units: [{ kind: 'warden', charge: ramp(8, boost) }, ...Array(extra).fill({ kind: 'drone', charge: ramp(5, boost) })] },
+    { turn: 1 + cadence * 4, units: [{ kind: 'drone', charge: ramp(5, boost) }, { kind: 'siphon', charge: ramp(9, boost) }, ...Array(extra).fill({ kind: 'drone', charge: ramp(5, boost) })] },
+    { turn: 1 + cadence * 5, units: [{ kind: 'warden', charge: ramp(9, boost) }, { kind: 'drone', charge: ramp(5, boost) }, ...Array(extra).fill({ kind: 'warden', charge: ramp(9, boost) })] },
+  ],
+});
+
+// `press`-family: lobbers forcing charge in from outside melee range.
+export const pressGen = ({ lobbers = 3, cadence = 4, lobCharge = 6, extra = 0 }) => ({
+  name: `press-l${lobbers}-c${cadence}-b${lobCharge}-x${extra}`,
+  waves: Array.from({ length: 5 }, (_, i) => ({
+    turn: 1 + cadence * i,
+    units: [
+      ...(i < lobbers ? [{ kind: 'lobber', charge: lobCharge }] : []),
+      ...(i === 2 ? [{ kind: 'warden', charge: 8 }] : [{ kind: 'drone', charge: 3 + i }]),
+      ...Array(extra).fill({ kind: 'drone', charge: 4 }),
+    ],
+  })),
+});
+
+// `miner` and `greedy` are hand-written policies, not "medium-skill players" —
+// D-021 says a mixed panel cannot localise a skill. The honest middle rung is a
+// depth-1 searcher with the same evaluation as the strong agent: someone who
+// plays well but does not plan two moves ahead.
+const PANEL = ['random', 'conservative', 'neutralD1', 'miner', 'optimizerNeutral', 'optimizerDeep'];
+
+export function score(enc, seeds = 150, needNearOverload = false) {
+  const r = {};
+  for (const a of PANEL) r[a] = sweep({ agentName: a, seeds, encounter: enc });
+  const strongest = Math.max(r.optimizerDeep.winRate, r.optimizerNeutral.winRate);
+  // The first version of this check only compared the middle of the ladder to
+  // *random*, which passes trivially once random is at 0% — it would have
+  // signed off on a setting where the turtle outranked the expert policy.
+  // A real middle rung has to sit clearly above the floor and below the ceiling.
+  const mid = r.neutralD1.winRate;
+  const ladderOk = mid > r.conservative.winRate + 0.10 && mid > 0.15 && mid < strongest - 0.10;
+  const ok = strongest >= 0.50 && strongest <= 0.65 &&
+    r.random.winRate < 0.05 && r.conservative.winRate < 0.05 && ladderOk &&
+    (!needNearOverload || r.optimizerNeutral.nearOverloadRate > 0.30);
+  return { r, strongest, ok, mid };
+}
+
+export function line(tag, s) {
+  const p = (x) => (x * 100).toFixed(0).padStart(3) + '%';
+  return `${tag.padEnd(22)} strong ${p(s.strongest)} | rnd ${p(s.r.random.winRate)} turtle ${p(s.r.conservative.winRate)} ` +
+    `D1 ${p(s.r.neutralD1.winRate)} miner ${p(s.r.miner.winRate)} neutral ${p(s.r.optimizerNeutral.winRate)} deep ${p(s.r.optimizerDeep.winRate)} ` +
+    `| nearOvl ${p(s.r.optimizerNeutral.nearOverloadRate)}${s.ok ? '  <== MEETS TARGET' : ''}`;
+}
+
+if (process.argv[2] === 'run') {
+  console.log('EXP-039 surge family');
+  for (const cadence of [4, 3, 2])
+    for (const extra of [0, 1, 2])
+      console.log(line(`c${cadence} x${extra}`, score(surgeGen({ cadence, extra }), 150)));
+}
