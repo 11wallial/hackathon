@@ -35,3 +35,16 @@ define fun.** Anything on this list that stops changing a decision gets deleted.
 ## Correctness (not design)
 - `conservationViolations` — must be 0. Asserted per transition.
 - `cascadeOverflow` — cascades hitting the 64-detonation guard. Must be 0.
+
+---
+
+## Sample size
+
+At the win rates this project works in (20-60%), 150 seeds gives roughly ±8pp on
+a single arm and **±11pp on the difference between two arms**. A 10pp delta at
+150 seeds is not a result.
+
+EXP-040 nearly recorded a false finding on exactly this: a 150-seed pass showed
+one flag raising the mid-rung more than the top, and 350 seeds showed the
+opposite. Standing rule: **confirm any surprising delta at 300+ seeds before
+building on it**, and quote the seed count next to every number.

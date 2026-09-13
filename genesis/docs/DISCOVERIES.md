@@ -441,3 +441,38 @@ be re-examined, which is the entire argument for keeping one.
 
 > **Principle**: when you fix an instrument, re-run the rejections, not just the
 > open questions. The graveyard is a list of results that may no longer hold.
+
+### D-026 — We nearly recorded a finding that was sampling noise
+
+**Evidence**: EXP-040. A 150-seed pass showed `shovePushes` raising the mid-rung
+(30% → 43%) more than the strongest agent (63% → 73%), which reads as a clean
+accessibility lever. At 350 seeds the mid-rung moved 33.7% → 40.3% and the
+strongest agent 60.9% → 70.6% — it *widens* the gap, the opposite conclusion.
+
+At the win rates this project works in, 150 seeds gives about ±11pp on a
+difference between two arms. Most of the deltas that have driven decisions here
+were far larger than that, which is why this has not bitten before — and is
+exactly why it nearly did now, on a 13pp effect that looked like a story.
+
+> **Principle**: confirm any *surprising* delta at 300+ seeds before building on
+> it, and quote the seed count beside every number. A result that would change
+> what you do next deserves the sample size that can carry it.
+
+### D-027 — Re-running the graveyard is cheap and changes verdicts
+
+**Evidence**: EXP-040 re-ran seven killed mechanics against a corrected
+instrument and re-derived encounters. Five stayed dead, two of them for better
+reasons than originally recorded (`settleMotes` takes the turtle to 68%, which
+is a D-024 failure rather than a win-rate one; `ringSize` is now a null
+confirmed at two very different board densities). One — `shovePushes` — kept its
+verdict but **lost its stated rationale entirely**: it was killed for narrowing
+the skill gradient and it widens it.
+
+The whole batch cost one command, because every killed mechanic had been left in
+as a config flag rather than deleted from the code.
+
+> **Principle**: kill mechanics by turning them off, not by deleting them. A
+> graveyard you can re-run is an asset; a graveyard you can only read is a
+> memoir. And re-run it whenever the instrument or the content underneath it
+> changes — a rejection is a measurement, and it inherits every flaw of the
+> apparatus that produced it.

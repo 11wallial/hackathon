@@ -1230,3 +1230,75 @@ that were quietly setting fire to their own capacity.
 - **Decision**: **KEEP** both re-derived encounters. Confidence HIGH on the
   calibration, MEDIUM on whether the target band itself is the right taste call
   — that is a judgement no simulation settles.
+
+---
+
+## Batch 13 — EXP-040, re-running the graveyard
+
+### EXP-040 — Which rejections no longer hold?
+
+- **Context**: D-025. Five lobbers were rejected as unsurvivable and are now the
+  adopted setting, because the instrument changed underneath the rejection.
+  Several other graveyard entries were killed on win-rate deltas measured the
+  same way — against agents pricing capacity at zero — and against encounters
+  that have since been re-derived. Both halves of those measurements are stale.
+- **Candidates** (all retained as config flags, so this costs nothing to run):
+  `spillFraction`, `staggerOnShove`, `blastSplit: outward`, `shovePushes`,
+  `settleMotes`, `ringSize`, and the raised `hotThreshold`.
+- **Hypothesis**: most stay dead, but **at least one reverses**, and we name it
+  in advance: **`ringSize: 16` now helps**. EXP-023 found extra nodes worthless
+  when `surge` ran a handful of bodies; the re-derived `surge` puts *five* units
+  into every wave on the same 12-node ring, so the crowding pressure that made
+  the original traffic jam (D-012) is far higher than when ring size was tested.
+  We also expect `shovePushes` and the outward blast split to look better than
+  they did — both were judged when the board was sparse and chains were rare;
+  chains now occur in ~100% of strong-play runs.
+- **The measurement trap, named in advance**: the encounters are calibrated for
+  every flag being **off**, so any flag that changes difficulty will move the win
+  rate away from the target band, and that is not evidence about the flag. A
+  first pass therefore reports the **ladder shape and quality metrics** (turtle
+  canary, mid-rung, tip kills, chains, decision entropy) alongside win rate, and
+  anything promising gets its encounter re-derived before a verdict.
+- **Result**: the named prediction is **falsified** and something else turned up.
+
+  **`ringSize` is a repeated null.** 16 nodes: mid-rung 25% vs baseline 25% on
+  `surge`; 30.0% vs 33.7% on `press` at 350 seeds. EXP-023 found nothing when
+  the board was sparse and this finds nothing now that `surge` puts five bodies
+  into every wave. Two tests at very different densities agree: ring size is not
+  a lever in this game. That is a stronger result than the original kill.
+
+  **Three stay dead, more emphatically than before** — `stagger` (strongest
+  agent 61% → 15% on `surge`), `blastSplit: outward` (61% → 9%), `spillFraction`
+  (raises the strong agent to 73% while cutting tip kills 10.59 → 6.87, i.e. it
+  makes the game easier *and* erodes its signature mechanic).
+
+  **`settleMotes` now fails for a better reason.** It took the do-nothing turtle
+  from 2% to **68%** on `surge`. Originally killed for costing win rate; the real
+  problem is D-024 — on a dense board it hands loose charge to whatever is
+  standing on it, and the board plays itself.
+
+  **`hotThreshold: 0.75` is a genuine accessibility lever, and the original
+  rejection holds.** On `press` at 350 seeds it moves the mid-rung 33.7% → 41.1%
+  and the strongest agent 60.9% → 50.9%, compressing the gap from **27.1pp to
+  9.7pp**. EXP-017 rejected it for "collapsing the gradient" and that is exactly
+  what it does — but we now know the collapse is *mastery headroom*, traded for
+  accessibility. That is a design choice, not an error.
+
+  **`shovePushes`: the verdict stands, the reason does not.** EXP-019 killed it
+  as a defensive tool that narrows the gradient. At 350 seeds it *widens* the
+  gap (27.1pp → 30.3pp) while lifting the mid-rung 33.7% → 40.3% and the
+  strongest agent to 70.6%. It does not flatten skill; it makes the game easier
+  across the board and overshoots the target band, which the encounter could be
+  re-derived around. Reopened as a candidate rather than adopted.
+
+  **And a process failure worth more than any of the above.** The 150-seed first
+  pass showed `shovePushes` raising the mid-rung *more* than the top — the
+  opposite conclusion. At these win rates 150 seeds gives roughly ±11pp on a
+  difference between two arms, so a 13pp delta is indistinguishable from noise.
+  We nearly recorded "displacement is an accessibility lever" as a finding.
+- **Decision**: **KEEP KILLED** — spill, stagger, outward blast, settleMotes,
+  ring size (now a confirmed double null). **KEEP KILLED, better understood** —
+  raised hot threshold, which is a real accessibility/depth trade and the first
+  concrete answer available if a playtest says the game is too hard for a
+  competent-but-shallow player. **REOPEN** — `shovePushes`, whose rejection
+  rested on a claim that does not survive re-measurement. Confidence HIGH.

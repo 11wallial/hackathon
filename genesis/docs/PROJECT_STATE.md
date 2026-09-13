@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v1.1 prototype
+## The game — **OVERLOAD**, v1.2 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -50,6 +50,10 @@ A genuine ramp rather than a step: on `surge`, 0.3 / 2.3 / 8.0 / 18.7 / 31.0 /
 62.7. Two instruments with different evaluations are kept permanently, because
 a single one is not a neutral window onto the game (D-016).
 
+Every number above is from 300+ seeds. At these win rates 150 seeds gives ±11pp
+on a difference between arms, which nearly produced a sign-flipped finding in
+EXP-040 (D-026).
+
 `miner` has collapsed to ~1%: it encodes a v0.1-era strategy and has not kept up
 with six versions of rules changes. Read it as a historical baseline, not as a
 competent-human proxy — `neutralD1` is the middle rung now.
@@ -94,6 +98,10 @@ agent myopia. See D-015.
 4. **The target difficulty band is a taste call, not a measurement.** EXP-039
    hit 50-65% for the strongest agent because that band was written down first.
    Whether it is the *right* band is a judgement no simulation settles.
+5. **`shovePushes` is reopened.** EXP-040 retracted the reason it was killed —
+   it widens the skill gap rather than flattening it. Re-deriving `press`
+   around it is queued; if it lands in band, `SHOVE` becomes positional as well
+   as economic.
 
 ## The lab
 

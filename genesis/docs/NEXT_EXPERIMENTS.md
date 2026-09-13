@@ -21,8 +21,11 @@ Ranked by expected information gain per unit of implementation cost.
 >    If the state has it and the score does not, the agent trades it away and
 >    looks like it is telling you something about the design (D-022).
 > 7. **Ask what the do-nothing agent scores.** A turtle is the cheapest exploit
->    detector in the panel and has caught three separate mechanics that looked
+>    detector in the panel and has caught four separate mechanics that looked
 >    fine on the win rates of agents that were trying (D-024).
+> 8. **Confirm a surprising delta at 300+ seeds.** 150 seeds gives ±11pp on a
+>    difference between arms; EXP-040 nearly recorded a sign-flipped finding
+>    (D-026). Quote the seed count beside every number.
 
 ### 1. Human playtest — the first thing here a simulation cannot do
 
@@ -38,15 +41,19 @@ by an agent:
 One person, five runs of `surge` and five of `press`, thinking aloud, would
 settle both and is worth more than any further agent batch.
 
-### 2. EXP-040 — Re-run the graveyard against the corrected instrument
+### 2. EXP-041 — Re-derive `press` around `shovePushes`
 
-D-025: a rejection is a measurement, and measurements inherit the flaws of the
-apparatus. Five lobbers were rejected as unsurvivable and are now the adopted
-setting. At least three other graveyard entries were killed against agents that
-priced capacity at zero — `spillFraction`, `staggerOnShove`, and the outward
-blast split — and each was killed on a win-rate delta that the same correction
-could move. Re-run them. Cheap, and the graveyard already records what each one
-needs to be re-examined.
+EXP-040 retracted the rationale for killing displacement: against a working
+instrument it *widens* the skill gap (27.1pp → 30.3pp) while lifting the whole
+ladder, rather than flattening it as EXP-019 claimed. It was not adopted only
+because it overshoots the target band on an encounter calibrated without it —
+which is a tuning objection, not a design one.
+
+Re-derive `press` with `shovePushes: true` using the EXP-039 machinery and the
+same declared target. If it lands in band with a ladder at least as good as the
+current one, the verb becomes positional as well as economic — which is a large
+increase in what `SHOVE` does per rule, the standard this project has used for
+mechanical density since the start.
 
 ### 3. EXP-031 — Re-tune `surge` against the improved agent
 

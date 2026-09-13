@@ -55,7 +55,7 @@ the rule at all: turtle on `swarm` 99% → 28%, tip kills 4.38 → 5.04. See D-0
 Known cost: it punishes the middle of the skill ladder hardest (miner 31% → 17%
 on `surge`), which is now Q7.
 
-### `settleMotes` — charge under a body is absorbed at end of round — **KILLED** (EXP-008)
+### `settleMotes` — charge under a body is absorbed at end of round — **KILLED** (EXP-008), and worse than we knew
 
 *Intuition*: venting is a free safety valve (D-002), so make putting charge down
 a positioning problem.
@@ -64,6 +64,11 @@ a positioning problem.
 while leaving the sideways one wide open, so it cost the player their staging
 area and bought nothing.
 *Revisit if*: shoving is ever restricted to occupied nodes.
+
+*Re-measured under v1.1 (EXP-040)*: it takes the do-nothing turtle agent from 2%
+to **68%** on `surge`. The original kill was for costing win rate; the actual
+fault is D-024 — on a dense board it hands loose charge to whatever happens to
+be standing on it, and the encounter solves itself. Killed harder.
 
 ### Higher hot thresholds (0.75, 0.85) — **ARCHIVED** (EXP-017)
 
@@ -80,7 +85,10 @@ heavy hitters neutralise themselves. Kept at 1.5x purely because it widens the
 skill gradient (2.1x → 3.4x), which is a different justification from the one we
 went looking for.
 
-### `shovePushes` — shoving displaces the body — **ARCHIVED** (EXP-019)
+### `shovePushes` — shoving displaces the body — **REOPENED** (EXP-019, then EXP-040)
+
+> **Status: the verdict stands but its stated reason does not.** See the
+> re-measurement note at the end of this entry.
 
 *Intuition*: break the two-body deadlock and let the player herd enemies onto
 piles.
@@ -90,6 +98,15 @@ halved to 8.5% and greedy jumped to 30.5%, narrowing the gradient. Adding reach
 to a verb subtracted tension.
 *Revisit if*: we want a deliberately safer, more puzzle-like variant, or if
 displacement is made costly.
+
+*Re-measured under v1.1 (EXP-040), and the reason for the kill did not survive.*
+Against agents that price their own capacity, on the re-derived `press`, it
+**widens** the skill gap (27.1pp → 30.3pp at 350 seeds) rather than narrowing
+it, while lifting both the mid-rung (33.7% → 40.3%) and the strongest agent
+(60.9% → 70.6%). It is an across-the-board difficulty reduction, not a
+gradient-flattener. Not adopted — it overshoots the target band — but it is now
+a live candidate that would need its own encounter re-derivation, and the
+original rationale is retracted.
 
 ### `spillFraction` — transfers leak onto the floor — **KILLED** (EXP-020)
 
@@ -112,12 +129,17 @@ optimizer win halved. Both this and spill reduce the rate at which charge gets
 fixes failing identically is the tell that the model is wrong — that is when we
 stopped writing rules and traced a deadlocked board.
 
-### Ring size as a deadlock fix — **KILLED** (EXP-023)
+### Ring size as any kind of lever — **KILLED TWICE** (EXP-023, EXP-040)
 
 Enlarging the ring from 12 to 16 or 20 nodes moved timeouts by 3pp and 20 was
 *worse* than 12. Chasers pack against the player wherever the player is, so
 extra nodes add empty ring behind the queue, not room inside it. Valuable as the
 control that ruled out "just add space" and isolated dissolution as the real fix.
+
+*Re-measured under v1.1 (EXP-040)*, when `surge` puts five bodies into every wave
+instead of two: still nothing. Mid-rung 25% vs 25% on `surge`, 30.0% vs 33.7% on
+`press`. Two tests at very different board densities agree — **ring size is not a
+lever in this game**, which is a stronger claim than the original kill supported.
 
 ### Distance-to-goal evaluation term — **KILLED** (EXP-027)
 

@@ -52,7 +52,7 @@ reproducible from these commands.
 
 ## Read the notebook
 
-Start with **`docs/DISCOVERIES.md`** — twenty-five principles that were *earned*,
+Start with **`docs/DISCOVERIES.md`** — twenty-seven principles that were *earned*,
 each naming its evidence, including one marked **FALSIFIED** and one carrying a
 correction to its own supporting data. Then:
 
@@ -60,8 +60,8 @@ correction to its own supporting data. Then:
 |---|---|
 | `docs/PROJECT_STATE.md` | what exists, what is proven, and the top defect |
 | `docs/DESIGN_THESIS.md` | current belief + two dated revisions, with what was falsified |
-| `docs/EXPERIMENTS.md` | 35 experiments, hypotheses pre-registered before each run |
-| `docs/GRAVEYARD.md` | thirteen killed mechanics, why each failed — and two resurrections |
+| `docs/EXPERIMENTS.md` | 36 experiments, hypotheses pre-registered before each run |
+| `docs/GRAVEYARD.md` | thirteen killed mechanics, why each failed, two resurrections and one retracted rationale |
 | `docs/OPEN_QUESTIONS.md` | the unresolved questions, ranked |
 | `docs/NEXT_EXPERIMENTS.md` | the ranked queue |
 | `docs/MECHANIC_GENEALOGY.md` | where each mechanic came from and what it mutated into |
