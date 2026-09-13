@@ -21,6 +21,7 @@
       <div class="panel" style="margin-top:14px">
         <h2>Your turn</h2>
         <div class="preview" id="preview">Pick an amount, then a direction.</div>
+        <div class="controls" id="encounters" style="margin-bottom:10px"></div>
         <div class="controls" id="amounts"></div>
         <div class="controls" id="actions"></div>
         <div id="banner"></div>
@@ -36,6 +37,7 @@
           <p><code>STEP</code> moves one node and picks up loose charge there, filling you to capacity and leaving the rest.</p>
           <p><code>SHOVE</code> pushes charge into the next node. If something is standing there it absorbs it &mdash; and picking charge up can never overload anything, so <b>only a shove or a blast can kill</b>.</p>
           <p>Any unit at half capacity or more runs <b>hot</b> and acts twice. That includes you.</p>
+          <p>A <b>lobber</b> throws charge at you from two to four nodes away and <b>cannot throw at range 1</b>, so walking into its face switches it off — if you can afford to. Nodes it can reach are ringed in red.</p>
           <p>An enemy that has spent everything goes to the floor to <b>refill</b> rather than standing around — and it fills to capacity, which leaves it hot and one point from going over. If there is nothing left to pick up, it eventually <b>dissolves</b>: a thing holding nothing is nothing. So there are two ways to end something — give it more than it can hold, or let it spend itself to nothing.</p>
           <p>Overloading does not end your run: you detonate where you stand, keep the blast, and lose capacity permanently.</p>
         </div>

@@ -2,20 +2,17 @@
 
 Unresolved, ranked by how much they would change the design.
 
-### Q1 — Is "charge is your death clock" salvageable? *(highest stakes, now better posed)*
+### Q1 — Is "charge is your death clock" salvageable? — **ANSWERED: yes, in content**
 
-Four experiments (EXP-008, 015, 017, and dissolution's side effect) failed to
-make the player occupy the dangerous end of their capacity — but EXP-029 then
-showed that evidence was collected with an agent explicitly told to fear
-overload. The unbiased instrument plays near overload **9.1%** of turns on
-`surge` and **0.0%** on drone-only `swarm`.
+Four rule-level experiments failed. One archetype settled it. On the `press`
+encounter the player spends 29.6-38.8% of turns in the top charge quartile, and
+the agent **without** a fear-of-overload term outperforms the one with it
+(57.8% vs 52.5%) precisely by living there. Avoiding your own capacity limit is
+now a measurable mistake on an encounter that forces charge onto you.
 
-That sharpens the question rather than closing it. The danger band is occupied
-exactly where the encounter forces charge onto the player, which is what D-008
-prescribed. So the live question is no longer "can it work" but **"which
-encounter compositions force enough charge onto the player, and is 9% enough to
-feel like a clock?"** That is answerable by building an encounter designed to
-force-feed and measuring it — not by another rule tweak.
+See D-017: the answer was never in the rulebook. *Residual*: the player now
+burns out ~3.5 times per run on `press`, which risks making self-detonation
+routine rather than dramatic (D-005). That is the new watch item.
 
 ### Q2 — What ends a deadlock? — **ANSWERED** (EXP-022, EXP-025)
 
@@ -56,14 +53,20 @@ should be relabelled as low-CCR controls rather than treated as content. We have
 therefore validated across *two* real shapes, not four. Ring sizes 8 and the
 rest of the geometry sweep are still untested.
 
-### Q7 — Is the mastery gap becoming an accessibility problem? *(new)*
+### Q7 — Is the mastery gap an accessibility cliff? *(promoted — now the top open question)*
 
 `hungryEnemies` (EXP-025) cost the middle of the ladder far more than the top:
 the optimizer lost 1pp while the explicit expert policy lost 14pp on `surge` and
 37pp on `swarm`. The v0.6 ladder is 61.5 / 24.5 / 17.0 / 8.0 / 5.8 / 2.0, which
 is a healthy spread — but the trend of the last two batches is that rules which
-widen the gradient do it by punishing competent-but-not-searching play. A human
-lives in that middle band. Worth watching, not yet acting on.
+widen the gradient do it by punishing competent-but-not-searching play. A human lives in that middle band.
+
+**EXP-030 made this worse and it is now the most pressing open question.** On
+`press` every non-searching agent clusters between 4.5% and 10.5% — the turtle
+*above* greedy, the miner last — while searching agents take 39-58%. That
+encounter separates "searches" from "does not" and almost nothing else. A game
+whose difficulty curve is a step function at "can you plan two moves ahead" is
+not a difficulty curve.
 
 ### Q6 — Where does progression live?
 

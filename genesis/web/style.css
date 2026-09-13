@@ -16,6 +16,7 @@ h1 { font-size: 20px; letter-spacing: .12em; text-transform: uppercase; margin: 
 svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
 .hud { display: flex; gap: 18px; flex-wrap: wrap; font-variant-numeric: tabular-nums; font-size: 13px; margin-bottom: 10px; }
 .hud b { color: var(--ink); font-weight: 600; }
+.hud { align-items: baseline; }
 .hud span { color: var(--dim); }
 .bar { height: 8px; border-radius: 4px; background: #1d2533; overflow: hidden; margin-top: 6px; }
 .bar > i { display: block; height: 100%; background: var(--charge); }

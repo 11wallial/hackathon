@@ -191,3 +191,40 @@ Still unfinished, and now for the fourth time: the player's own capacity. It is
 a wall they stand clear of, not a clock. Q1 remains the decision this design
 most needs, and dissolution did not answer it — giving the player a reason to
 soak charge still did not make them soak it. D-008 holds.
+
+### R4 — 2026-09-13, after EXP-030
+
+**The longest-running open question is closed, and the answer was not a rule.**
+
+Since R1 the thesis has carried an unfinished sentence: charge is supposed to be
+a death clock, and the player never went near their own capacity. Four rule-level
+experiments failed at it. EXP-030 added one enemy archetype — a **lobber** that
+throws charge from two to four nodes away and cannot throw at range 1 — and the
+player's top-quartile occupancy went from 3% to 38.8%.
+
+The decisive number is not the occupancy, it is which agent wins. On `press`,
+the optimizer **without** a fear-of-overload term beats the deeper-searching one
+**with** it, 57.8% to 52.5%, while spending 31.8% of turns near overload against
+5.9%. Avoiding your own capacity limit is now a measurable mistake.
+
+Why it needed content rather than rules is the general lesson (D-017, D-018): on
+a ring, melee pressure is capped by geometry three separate ways, and no
+per-attacker number reaches past that cap. Pressure is a property of what you
+are fighting.
+
+> **Thesis v0.5** (the sentence that was unfinished for four revisions, now
+> finished in bold). Charge is a single finite thing that is ammunition, power
+> and mortality at once, and it only ever changes hands. You do not damage an
+> enemy — you overfill it. The floor is the shared, contested bank everything
+> draws from; loading a target from it is free, but the last point has to come
+> from you. There are two ways for a thing to stop existing: give it more than
+> it can hold, or let it spend itself to nothing. **And when something is
+> throwing charge at you faster than you can put it down, your own capacity is
+> the clock — being nearly full is where the game is won, and flinching from it
+> loses.**
+
+What this now costs us, recorded rather than hidden: on `press` the player burns
+out around three and a half times per run, which threatens to make
+self-detonation routine instead of dramatic (D-005); and `press` has a much
+worse skill ladder than `surge`, separating "searches" from "does not" and
+little else. Q7 is now the top open question.

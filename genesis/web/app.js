@@ -7,21 +7,29 @@ import {
 } from '../sim/rules.js';
 
 const R = 12;
-const KIND_LABEL = { player: 'You', drone: 'Drone', siphon: 'Siphon', warden: 'Warden' };
+const KIND_LABEL = { player: 'You', drone: 'Drone', siphon: 'Siphon', warden: 'Warden', lobber: 'Lobber' };
 const KIND_HINT = {
   drone: 'walks at you and shoves what it has, then goes looking for more',
   siphon: 'ignores you, eats loose charge, huge capacity — a bomb you can build',
   warden: 'slow, arrives full, hits hard',
+  lobber: 'throws charge at you from 2-4 nodes away, and cannot throw at all if you are next to it',
 };
+
+const ENCOUNTERS = {
+  surge: ['Surge', 'The standard fight. Waves arrive progressively fuller, so late enemies are dangerous and brittle at the same time.'],
+  press: ['Press', 'The pressure test. Lobbers force charge into you from range; you will be full more often than you would like.'],
+};
+let encounterId = 'surge';
 
 let state, amount = 1, seen = 0;
 const $ = (id) => document.getElementById(id);
 
 function newRun() {
-  state = createEncounter({ encounter: 'surge', seed: (Math.random() * 1e9) | 0, record: true });
+  state = createEncounter({ encounter: encounterId, seed: (Math.random() * 1e9) | 0, record: true });
   amount = 1; seen = 0;
   $('log').innerHTML = '';
-  logLine('A new field. Charge is conserved: what is here is all there will be, plus whatever arrives inside the next wave.', '');
+  logLine(`<b>${ENCOUNTERS[encounterId][0]}.</b> ${ENCOUNTERS[encounterId][1]}`, '');
+  logLine('Charge is conserved: what is here is all there will be, plus whatever arrives inside the next wave.', '');
   render();
 }
 
@@ -37,6 +45,24 @@ function render() {
   const svg = [];
 
   svg.push(`<circle cx="230" cy="230" r="168" fill="none" stroke="#1c2533" stroke-width="2"/>`);
+
+  // Shade every node a lobber can currently throw into. The range rule is the
+  // whole decision the archetype exists to create, so it has to be on the board.
+  const threatened = new Set();
+  for (const u of state.units) {
+    if (!u.alive || u.ai !== 'lob') continue;
+    for (let d = u.minRange; d <= u.maxRange; d++) {
+      threatened.add(mod(u.node + d, R));
+      threatened.add(mod(u.node - d, R));
+    }
+  }
+  for (const n of threatened) {
+    const q = pos(n);
+    // Kept deliberately faint: on `press` almost everywhere is threatened, so
+    // this should read as ambient pressure, with the *unringed* nodes standing
+    // out as the rare safe ground.
+    svg.push(`<circle cx="${q.x}" cy="${q.y}" r="34" fill="none" stroke="#ff547026" stroke-width="5"/>`);
+  }
 
   for (let n = 0; n < R; n++) {
     const { x, y } = pos(n);
@@ -121,6 +147,9 @@ function renderControls() {
     <button data-act='{"type":"step","dir":1}' ${!has('step', 1) || over ? 'disabled' : ''}>Step ▶</button>
     <button class="primary" data-act='{"type":"end"}' ${over ? 'disabled' : ''}>End turn</button>
     <button data-new="1">New run</button>`;
+  $('encounters').innerHTML = Object.entries(ENCOUNTERS).map(([id, [name, blurb]]) =>
+    `<button data-enc="${id}" aria-pressed="${id === encounterId}" class="amt" title="${blurb}">${name}</button>`
+  ).join('') + `<span style="align-self:center;color:#8593a8;font-size:12px;margin-left:6px">${ENCOUNTERS[encounterId][1]}</span>`;
 }
 
 // The preview forks the real state and runs the real rules, so it can never
@@ -183,6 +212,8 @@ function drainEvents() {
     const e = state.events[seen];
     if (e.type === 'detonate') {
       logLine(`<b>${e.kind === 'player' ? 'You overload' : KIND_LABEL[e.kind] + ' goes over capacity'}</b> on node ${e.node} and detonates for <b>${e.payload}</b>${e.survived ? ' — you survive, capacity permanently reduced' : ''}.`, e.kind === 'player' ? 'bad' : 'boom');
+    } else if (e.type === 'lob') {
+      logLine(`<b>Lobber</b> on node ${e.from} throws <b>${e.amount}</b> across the gap into you.`, 'bad');
     } else if (e.type === 'dissolve') {
       logLine(`<b>${KIND_LABEL[e.kind]}</b> on node ${e.node} has held nothing for too long and dissolves.`, '');
     } else if (e.type === 'spawn' && e.kind !== 'player') {
@@ -202,6 +233,7 @@ function drainEvents() {
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('button');
   if (!b) return;
+  if (b.dataset.enc) { encounterId = b.dataset.enc; return newRun(); }
   if (b.dataset.new) return newRun();
   if (b.dataset.amt) { amount = +b.dataset.amt; renderControls(); $('preview').innerHTML = `Moving <b>${amount}</b> charge.`; return; }
   if (b.dataset.act) act(JSON.parse(b.dataset.act));

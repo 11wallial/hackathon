@@ -790,3 +790,111 @@ change. Conservation violations: 0.
 - **Decision**: **KEEP** `optimizerNeutral` permanently in the panel as an
   instrument check. Confidence HIGH on the bias, MEDIUM on its magnitude.
 
+
+---
+
+## Batch 9 — EXP-030, settling Q1 with content
+
+### EXP-030 — The lobber: force charge onto the player from range
+
+- **Context**: Q1 has failed four times at the *rules* level. EXP-029 then
+  showed why the question was mis-posed: the unbiased agent already plays near
+  overload 9.1% of turns on `surge` and 0.0% on drone-only `swarm`. The
+  difference is how hard the composition pushes charge onto the player. So this
+  is a **content** experiment, not a rule change.
+- **The obstacle this has to clear**: on a ring, melee pressure is
+  self-limiting three ways. Only two units can ever be adjacent to the player;
+  D-009 says a hard hitter disarms itself; and the player moves 2-3 nodes a
+  turn against an enemy's 1, so they can always kite. Any archetype that only
+  threatens at range 1 cannot force-feed.
+- **The design**: a **lobber** — throws charge at the player from range 2-4 and
+  **cannot lob at range 1**. So closing the distance neutralises it, which makes
+  it a positioning problem rather than a damage stat, and it composes with the
+  existing rules: lobbed charge fills you, you must dump it, the floor fills,
+  and hungry enemies refill from that floor and lob it back. That loop is the
+  pump D-009 said melee could not provide.
+- **Hypothesis**:
+  1. top-quartile charge occupancy for the **neutral** optimizer exceeds **25%**
+     on the new encounter (12.5% on `surge`);
+  2. near-overload turns exceed **20%** (9.1% on `surge`);
+  3. player deaths by self-overload rise materially.
+- **Risks being watched, both of which would mean rejecting it**:
+  (a) *unavoidable death* — if the strong agent's loss rate exceeds ~50% this is
+  lethality, not tension; (b) *fake threat* — if the answer is trivially "stand
+  next to the lobber", the agent will spend most of its turns adjacent to one
+  and the decision is not a decision.
+- **Measurement**: chargeBand, nearOverloadRate, deathCause, loss rate, and the
+  share of player-turns spent adjacent to a lobber, under **both** instruments.
+- **Result**: H1 and H2 confirmed with room to spare, and **risk (a) fired
+  exactly as pre-registered on the first dose**: every agent died 95-100% of the
+  time. Near-overload for the neutral agent was 31.5% (predicted >20%) and top
+  quartile 39.5% (predicted >25%), so the mechanism worked and the dosage was
+  absurd.
+
+  A dose sweep against a target declared before running (strong agent losing
+  25-45%, neutral agent still above 15% near-overload) gave a clean monotone
+  response:
+
+  | lobbers | strong win/loss/timeout | neutral top quartile | neutral near-overload | random |
+  |---|---|---|---|---|
+  | 1 | 97% / 1% / 3% | 16.8% | 12.1% | 11% |
+  | 2 | 83% / 10% / 8% | 31.3% | 22.7% | 11% |
+  | **3** | **51% / 34% / 16%** | **36.9%** | **29.6%** | 8% |
+  | 4 | 20% / 64% / 16% | 42.4% | 37.0% | 3% |
+  | 5 | 3% / 92% / 6% | 41.9% | 33.8% | 1% |
+
+  **Risk (b) did not fire.** At the adopted dose the strong agent is adjacent to
+  a lobber only 14.4% of turns and spends 69.6% of turns *inside* lob range, at
+  mean distance 3.06. It cannot afford to close — the chasers pin it, and
+  closing on one lobber exposes it to the others.
+
+- **Interpretation**: **Q1 is answered, and the answer was content.** Four
+  rule-level experiments (EXP-008, 015, 017, and dissolution's side effect)
+  failed to make the player occupy their own danger band. One archetype moved it
+  from 9.1% to 29.6%. D-008's prescription — *design the pressure, not the
+  incentive* — turns out to have been pointing at encounter composition the
+  whole time, and we spent four experiments looking for it in the rulebook.
+
+  Why an archetype was needed at all is itself the finding: on a ring, melee
+  pressure is capped three separate ways — only two units can be adjacent to the
+  player, a hard hitter disarms itself (D-009), and the player moves 2-3 nodes
+  per turn against an enemy's 1. No amount of melee tuning can force-feed. The
+  lobber gets past all three by reaching over the front rank, and it stays a
+  decision rather than a stat because it cannot throw at range 1.
+
+- **Watch item**: the player now burns out ~3.5 times per run (mean capacity
+  lost 7.25 of 10). Self-detonation was meant to be a dramatic choice (D-005);
+  at this rate it risks becoming routine. Queued.
+- **Decision**: **KEEP** the lobber and adopt `press` at 3 lobbers / charge 6.
+  Confidence MEDIUM-HIGH (one encounter family, both instruments agree).
+
+### EXP-030c — The adopted `press` panel, and the sharpest result in the project
+
+400 seeds, `press` (3 lobbers, charge 6):
+
+| agent | win | loss | timeout | top quartile | near-overload | tip kills |
+|---|---|---|---|---|---|---|
+| miner | 4.5% | 87.8% | 7.8% | 22.1% | 18.6% | 1.16 |
+| random | 7.5% | 68.8% | 23.8% | 11.5% | 7.4% | 1.51 |
+| greedy | 8.3% | 90.8% | 1.0% | 44.6% | 39.7% | 0.69 |
+| conservative | 10.5% | 53.3% | 36.3% | 4.2% | 2.1% | 1.81 |
+| optimizer (fear term) | 39.3% | 48.3% | 12.5% | 8.3% | 5.6% | 2.94 |
+| optimizerDeep (fear term) | 52.5% | 33.8% | 13.8% | 8.5% | 5.9% | 2.65 |
+| **optimizerNeutral (no fear term)** | **57.8%** | 36.0% | 6.3% | **38.8%** | **31.8%** | **3.33** |
+
+**The unbiased agent wins, and it wins by living in the danger band.** It spends
+31.8% of its turns near overload against the fear-term agent's 5.9%, and beats
+even the deeper-searching fear-term agent. On an encounter that forces charge
+onto the player, avoiding your own capacity limit is a **measurable mistake**.
+
+That is the complete answer to Q1. Charge really is a death clock — but only
+when the composition makes it one, which is exactly what D-008 prescribed and
+what four rule-level experiments failed to find because they were looking in the
+rulebook instead of the encounter list.
+
+**Recorded honestly: `press` has a worse skill ladder than `surge`.** The
+non-searching agents cluster between 4.5% and 10.5% with the turtle *above*
+greedy and the miner last. It separates "searches" from "does not" and almost
+nothing else, which makes Q7 (is the mastery gap an accessibility cliff?) more
+pressing, not less. The two encounters now have distinct jobs: `surge` is the
+well-shaped fight with eight rungs, `press` is the pressure test.

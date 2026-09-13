@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v0.7 prototype
+## The game — **OVERLOAD**, v0.8 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -56,7 +56,7 @@ neutral window onto the game (D-016).
 | Depth is not reducible to a rule | hand-written expert policy reaches 17.0%, search reaches 61.5% | MEDIUM |
 | Chains are real emergence | 98.8% of optimizer runs contain one; max length 6 | MEDIUM |
 | Findings replicate across shapes | validated on `surge` and `swarm`; two other encounters are low-CCR controls | LOW-MEDIUM |
-| Charge is a felt *death clock* | **not demonstrated after four attempts** — see OPEN_QUESTIONS Q1 | LOW |
+| Charge is a felt *death clock* | **demonstrated** on `press`: the agent without a fear-of-overload term beats the one with it, 57.8% vs 52.5%, while spending 31.8% of turns near overload vs 5.9% | MEDIUM-HIGH |
 
 ## The deadlock, fully decomposed
 
@@ -80,11 +80,13 @@ agent myopia. See D-015.
 2. **The strongest agent wins 78%**, which may mean `surge` is now too easy for
    competent play. Watch item, not yet acted on — the agent got much better
    this batch and the encounter has not been re-tuned against it.
-3. **The player's own capacity is still a weak source of tension** (Q1) —
-   though EXP-029 showed our evidence for that was partly instrument bias, and
-   the unbiased agent does play near overload 9.1% of the time on `surge`.
-4. **Rules that widen the skill gradient keep doing it by punishing the middle**
-   of the ladder rather than rewarding the top (Q7).
+3. **The skill curve is close to a step function** (Q7, now the top open
+   question). On `press` every non-searching agent lands between 4.5% and 10.5%
+   while searching agents take 39-58%. A game whose difficulty curve is a step
+   at "can you plan two moves ahead" does not have a difficulty curve.
+4. **Self-detonation may be becoming routine.** On `press` the player burns out
+   ~3.5 times per run. D-005 earned burnout its place as a dramatic *choice*;
+   at this rate it is closer to a cost of doing business.
 
 ## The lab
 
@@ -93,7 +95,8 @@ genesis/
   index.html  web/            playable client (same modules as the sim)
   sim/        rules.js        the engine; no presentation code allowed here
               config.js       every mutable rule, as data. Experiments are overrides.
-              content.js      archetypes + encounters, data only
+              content.js      archetypes (drone, siphon, warden, lobber) and
+                              encounters, data only
               rng.js          seeded RNG whose state lives inside the game state
   agents/     index.js        random, conservative, greedy, explorer, miner,
                               optimizer (2-ply), optimizerDeep (3-ply),

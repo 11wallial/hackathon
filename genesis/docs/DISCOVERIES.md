@@ -270,3 +270,39 @@ behaviour until checked against a different one.
 > report both. And never add a heuristic term to fix a measurement — in a game
 > where being closer to a goal can be more dangerous than being far from it,
 > "distance to goal" is not monotone and will be exploited.
+
+### D-017 — Four rule experiments failed where one archetype succeeded
+
+**Evidence**: EXP-008, 015, 017 and dissolution's side effect all failed to move
+the player's top-quartile charge occupancy off ~3%. Adding a single enemy type
+moved it to 29.6%, and on that encounter the agent *without* a fear-of-overload
+term beats the one with it (57.8% vs 52.5%) while spending 31.8% of turns near
+overload against 5.9%.
+
+D-008 concluded "design the pressure, not the incentive" and we then spent four
+experiments looking for that pressure in the **rules**. It was never going to be
+there. Pressure is a property of what the player is fighting, not of what the
+verbs do.
+
+> **Principle**: when a desired player behaviour resists several rule changes,
+> check whether it is a *content* question before writing a fifth rule. Rules
+> define what is possible; content decides what is forced.
+
+### D-018 — Geometry caps pressure, and no amount of tuning lifts the cap
+
+**Evidence**: on a 12-node ring with one unit per node, melee pressure is capped
+three independent ways — at most two units can be adjacent to the player; a hard
+hitter empties itself in one blow (D-009); and the player moves 2-3 nodes a turn
+against an enemy's 1, so they can always kite. EXP-018's throughput sweep
+(1x → 3x) *reduced* player danger. The lobber lifts the cap only because it
+reaches over the front rank.
+
+> **Principle**: before tuning a pressure number, compute the structural ceiling
+> the board imposes on it. If the geometry caps incoming pressure at two
+> attackers, no per-attacker number reaches a third.
+
+Note the corollary that keeps the lobber honest: it cannot throw at range 1, so
+the counter is positional rather than statistical. The measured behaviour shows
+the counter is real but expensive — the strong agent closes to range 1 only
+14.4% of turns and spends 69.6% inside the threatened band, because closing on
+one lobber exposes it to the others.

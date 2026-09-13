@@ -20,6 +20,10 @@ pile until it runs hot, then tip it over with one point of your own. And there a
 stop existing: give it more than it can hold, or let it spend itself to nothing
 — so an enemy that has emptied itself into you does not die, it goes shopping.
 
+Two encounters ship: **Surge**, the well-shaped fight, and **Press**, where
+lobbers throw charge into you from outside melee range and being nearly full is
+where the game is won.
+
 ## Play it
 
 No build step, no dependencies. Serve the repository root and open `/genesis/`:
@@ -48,7 +52,7 @@ reproducible from these commands.
 
 ## Read the notebook
 
-Start with **`docs/DISCOVERIES.md`** — sixteen principles that were *earned*,
+Start with **`docs/DISCOVERIES.md`** — eighteen principles that were *earned*,
 each naming its evidence, including one marked **FALSIFIED** and one carrying a
 correction to its own supporting data. Then:
 
@@ -56,7 +60,7 @@ correction to its own supporting data. Then:
 |---|---|
 | `docs/PROJECT_STATE.md` | what exists, what is proven, and the top defect |
 | `docs/DESIGN_THESIS.md` | current belief + two dated revisions, with what was falsified |
-| `docs/EXPERIMENTS.md` | 29 experiments, hypotheses pre-registered before each run |
+| `docs/EXPERIMENTS.md` | 30 experiments, hypotheses pre-registered before each run |
 | `docs/GRAVEYARD.md` | eleven killed mechanics, why each failed — and one resurrection |
 | `docs/OPEN_QUESTIONS.md` | the unresolved questions, ranked |
 | `docs/NEXT_EXPERIMENTS.md` | the ranked queue |
@@ -93,6 +97,15 @@ within thirty seconds of reading a board.
 evidence that "players never approach their own overload" had an explicit
 fear-of-overload term in its evaluation. An unbiased one plays near overload
 3.6x more often. The notebook now keeps two instruments and reports both.
+
+**Four rule experiments failed where one enemy succeeded.** Making the player's
+own capacity feel like a death clock resisted four rule changes across five
+batches. Adding a single archetype — one that throws charge from outside melee
+range, and cannot throw at range 1 — moved top-quartile occupancy from 3% to
+38.8%. The decisive number is which agent wins: on that encounter the optimizer
+*without* a fear-of-overload term beats the deeper-searching one *with* it, so
+flinching from your own capacity limit is now a measurable mistake. Pressure
+turned out to be a property of what you fight, not of what the verbs do.
 
 ## Architecture
 

@@ -14,6 +14,14 @@ export const ARCHETYPES = {
 
   // Slow, starts hot, hits for a lot. The reason you cannot simply stand still.
   warden: { capacity: 10, charge: 6, throughput: 4, ai: 'chase', moveEvery: 2 },
+
+  // Throws charge at the player from range 2-4 and cannot do it at range 1, so
+  // closing the distance switches it off. Exists to answer Q1: melee pressure
+  // is self-limiting on a ring (only two units can reach you, a hard hitter
+  // disarms itself, and you outrun everything), so forcing charge onto the
+  // player needs a threat that reaches past the front rank.
+  lobber: { capacity: 8, charge: 6, throughput: 3, ai: 'lob', moveEvery: 2,
+            minRange: 2, maxRange: 4 },
 };
 
 // A wave injects charge into the encounter; this is the escalation lever.
@@ -68,6 +76,23 @@ export const ENCOUNTERS = {
       { turn: 13, charge: 8,  units: [{ kind: 'warden' }] },
       { turn: 17, charge: 10, units: [{ kind: 'drone' }, { kind: 'siphon' }] },
       { turn: 21, charge: 12, units: [{ kind: 'warden' }, { kind: 'drone' }] },
+    ],
+  },
+
+  // EXP-030. Built to force-feed: lobbers push charge into the player from
+  // outside melee range, chasers pin, and the charge the player dumps to
+  // survive is picked back up by hungry enemies and thrown again.
+  // Dosage selected by the EXP-030b sweep against a target declared before
+  // running (strong agent losing 25-45%, danger band still occupied). Five
+  // lobbers killed everything; three at charge 6 is a fight.
+  press: {
+    name: 'press',
+    waves: [
+      { turn: 1,  units: [{ kind: 'drone' }, { kind: 'lobber', charge: 6 }] },
+      { turn: 5,  units: [{ kind: 'drone', charge: 4 }, { kind: 'lobber', charge: 6 }] },
+      { turn: 9,  units: [{ kind: 'warden', charge: 8 }, { kind: 'lobber', charge: 6 }] },
+      { turn: 13, units: [{ kind: 'drone', charge: 5 }] },
+      { turn: 17, units: [{ kind: 'drone', charge: 5 }] },
     ],
   },
 

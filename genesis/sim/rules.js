@@ -147,6 +147,8 @@ function spawnUnit(s, kind, node, team, chargeOverride) {
       : a.throughput,
     ai: a.ai,
     moveEvery: a.moveEvery,
+    minRange: a.minRange,
+    maxRange: a.maxRange,
     alive: true,
     killedByBait: false,
     floorFed: 0,
@@ -420,6 +422,7 @@ function enemyPhase(s) {
     for (let i = 0; i < acts && u.alive && !s.result; i++) {
       if (u.ai === 'chase') aiChase(s, u);
       else if (u.ai === 'scavenge') aiScavenge(s, u);
+      else if (u.ai === 'lob') aiLob(s, u);
       resolveOverloads(s);
       checkEnd(s);
     }
@@ -533,6 +536,30 @@ function aiChase(s, u) {
   // a stable two-cycle: the unit walks away, re-approaches, and repeats forever
   // (seen in EXP-026, seed 3001). Spent bodies dissolve now, so waiting is safe.
   moveUnit(s, u, towards(u.node, p.node, R));
+}
+
+// Throws charge across the gap. Conservation is untouched — the charge simply
+// changes hands at a distance. Inside minRange it cannot throw, so walking into
+// its face turns it off; that is the decision the archetype exists to create.
+function aiLob(s, u) {
+  const R = s.config.ringSize;
+  const p = getPlayer(s);
+  if (s.config.hungryEnemies && u.charge < u.throughput) {
+    for (let n = 0; n < R; n++) if (s.ring[n] > 0) { aiScavenge(s, u); return; }
+  }
+  if (!p || !p.alive) return;
+  const d = ringDist(u.node, p.node, R);
+  if (d >= u.minRange && d <= u.maxRange && u.charge > 0) {
+    const amount = Math.min(u.throughput, u.charge);
+    u.charge -= amount;
+    emit(s, { type: 'lob', id: u.id, amount, target: p.id, from: u.node });
+    giveCharge(s, p, amount, false, 'lob');
+    return;
+  }
+  if (!canMoveThisTurn(s, u)) return;
+  // Too close: back off to get back into throwing range. Too far: close in.
+  const dir = d < u.minRange ? -towards(u.node, p.node, R) : towards(u.node, p.node, R);
+  moveUnit(s, u, dir);
 }
 
 function aiScavenge(s, u) {
