@@ -18,17 +18,26 @@ export const surgeGen = ({ cadence = 4, extra = 0, boost = 1 }) => ({
 });
 
 // `press`-family: lobbers forcing charge in from outside melee range.
-export const pressGen = ({ lobbers = 3, cadence = 4, lobCharge = 6, extra = 0 }) => ({
-  name: `press-l${lobbers}-c${cadence}-b${lobCharge}-x${extra}`,
-  waves: Array.from({ length: 5 }, (_, i) => ({
-    turn: 1 + cadence * i,
-    units: [
-      ...(i < lobbers ? [{ kind: 'lobber', charge: lobCharge }] : []),
-      ...(i === 2 ? [{ kind: 'warden', charge: 8 }] : [{ kind: 'drone', charge: 3 + i }]),
-      ...Array(extra).fill({ kind: 'drone', charge: 4 }),
-    ],
-  })),
-});
+// Lobbers are spread across the five waves rather than capped at one each —
+// the first version silently built the same encounter for any count above five,
+// which produced three identical rows in the EXP-041 search pass and would have
+// read as "lobber count does not matter".
+export const pressGen = ({ lobbers = 3, cadence = 4, lobCharge = 6, extra = 0 }) => {
+  const WAVES = 5;
+  const per = Array.from({ length: WAVES }, (_, i) =>
+    Math.floor(lobbers / WAVES) + (i < lobbers % WAVES ? 1 : 0));
+  return {
+    name: `press-l${lobbers}-c${cadence}-b${lobCharge}-x${extra}`,
+    waves: Array.from({ length: WAVES }, (_, i) => ({
+      turn: 1 + cadence * i,
+      units: [
+        ...Array(per[i]).fill({ kind: 'lobber', charge: lobCharge }),
+        ...(i === 2 ? [{ kind: 'warden', charge: 8 }] : [{ kind: 'drone', charge: 3 + i }]),
+        ...Array(extra).fill({ kind: 'drone', charge: 4 }),
+      ],
+    })),
+  };
+};
 
 // `miner` and `greedy` are hand-written policies, not "medium-skill players" —
 // D-021 says a mixed panel cannot localise a skill. The honest middle rung is a
@@ -36,9 +45,9 @@ export const pressGen = ({ lobbers = 3, cadence = 4, lobCharge = 6, extra = 0 })
 // plays well but does not plan two moves ahead.
 const PANEL = ['random', 'conservative', 'neutralD1', 'miner', 'optimizerNeutral', 'optimizerDeep'];
 
-export function score(enc, seeds = 150, needNearOverload = false) {
+export function score(enc, seeds = 150, needNearOverload = false, config = {}) {
   const r = {};
-  for (const a of PANEL) r[a] = sweep({ agentName: a, seeds, encounter: enc });
+  for (const a of PANEL) r[a] = sweep({ agentName: a, seeds, encounter: enc, config });
   const strongest = Math.max(r.optimizerDeep.winRate, r.optimizerNeutral.winRate);
   // The first version of this check only compared the middle of the ladder to
   // *random*, which passes trivially once random is at 0% — it would have

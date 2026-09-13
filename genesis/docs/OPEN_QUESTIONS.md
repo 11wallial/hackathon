@@ -53,6 +53,21 @@ should be relabelled as low-CCR controls rather than treated as content. We have
 therefore validated across *two* real shapes, not four. Ring sizes 8 and the
 rest of the geometry sweep are still untested.
 
+### Q7b — Which way should the accessibility/depth trade go? *(the live half of Q7)*
+
+EXP-040 and EXP-041 produced two calibrated, opposite levers, both landing in the
+difficulty target band and both measured at 350 seeds on `press`:
+
+| lever | mid-rung | skill gap | verb richness |
+|---|---|---|---|
+| `hotThreshold: 0.75` | +7.4pp | −17.4pp | unchanged |
+| `shovePushes` (re-tuned to `l6 c4`) | −11.7pp | +6.0pp | entropy 1.46 → 1.54, tip kills 2.98 → 3.25 |
+
+Neither is adopted. The question is not which is better measured — both are
+measured — but which direction this game should go, and that is a question about
+people. See D-029. This is the second item on the critical path waiting for the
+same human playtest.
+
 ### Q7 — Is the skill curve a step function? — **ANSWERED, and relocated**
 
 Yes, but not where we thought. EXP-034 varied search depth alone: on `surge` the

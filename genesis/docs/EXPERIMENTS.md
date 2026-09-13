@@ -1302,3 +1302,74 @@ that were quietly setting fire to their own capacity.
   concrete answer available if a playtest says the game is too hard for a
   competent-but-shallow player. **REOPEN** — `shovePushes`, whose rejection
   rested on a claim that does not survive re-measurement. Confidence HIGH.
+
+---
+
+## Batch 14 — EXP-041, re-deriving `press` around `shovePushes`
+
+### EXP-041 — Does displacement earn a place once the encounter is tuned for it?
+
+- **Context**: EXP-040 retracted the reason `shovePushes` was killed. It does not
+  flatten the skill gradient — at 350 seeds it *widens* it (27.1pp → 30.3pp)
+  while lifting the whole ladder. It was left unadopted only because it
+  overshoots a target band calibrated without it, which is a tuning objection
+  rather than a design one.
+- **Question**: with `press` re-derived around it, does displacement land in
+  band with a ladder at least as good as the current one?
+- **Why it would be worth having**: `SHOVE` currently does four jobs (attack,
+  vent, mote placement, bait). Displacement adds a fifth — positional control —
+  to the *same* verb, which is the mechanical-density standard this project has
+  used since the first thesis. Herding something onto a pile you built is the
+  kind of interaction the design keeps rewarding.
+- **Hypothesis**: a configuration exists in band, and it will need **more**
+  pressure than the current five lobbers, since displacement is a defensive
+  option as well as an offensive one.
+- **The risk that decides it, named in advance**: displacement gives the player
+  a way to shove a lobber out of position, which is exactly the pressure Q1's
+  demonstration rests on. **If the neutral agent's near-overload rate falls
+  below 30%, adopting this would quietly undo the project's best-supported
+  finding**, and it gets rejected regardless of how good the ladder looks.
+- **Secondary check**: does the verb get *richer* or just noisier? Compare
+  conditional shove entropy and tip kills against the current `press`.
+- **Measurement**: sweep lobbers and cadence with `shovePushes: true`, at 150
+  seeds for the search and 350 for any finalist (D-026).
+
+- **First search pass was invalid, and the tell was three identical rows.**
+  Five, six and seven lobbers returned *byte-identical* panels. Two bugs in our
+  own machinery: `score()` never accepted a config, so `shovePushes` was never
+  applied at all; and `pressGen` placed at most one lobber per wave across five
+  waves, so any count above five built the same encounter. Either alone would
+  have produced a confident, entirely false experiment — most likely written up
+  as "lobber count does not matter under displacement". Fixed, and re-run.
+
+- **Result** (350 seeds on the finalist):
+
+  | config | turtle | mid-rung | strongest | gap | near-overload | tip kills | Hshove\|band |
+  |---|---|---|---|---|---|---|---|
+  | current `press` | 2.6% | **33.7%** | 60.9% | 27.1pp | 54.5% | 2.98 | 1.46 |
+  | `l6 c4` + displacement | 0.0% | **22.0%** | 55.1% | **33.1pp** | 50.8% | **3.25** | **1.54** |
+
+- **Interpretation**: the pre-registered risk **did not fire** — near-overload
+  stays at 50.8%, far above the 30% floor, so Q1's demonstration survives. And
+  the secondary check came out positive: conditional shove entropy rises 1.46 →
+  1.54 and tip kills 2.98 → 3.25, so `SHOVE` genuinely does get richer rather
+  than noisier when it also moves bodies.
+
+  But the ladder does not survive. The mid-rung falls **33.7% → 22.0%** while
+  the gap widens to 33.1pp. Displacement tuned into band buys mastery headroom
+  and pays for it in accessibility. The adoption criterion written before the
+  run was "in band **with a ladder at least as good**", and this is not.
+- **Decision**: **DO NOT ADOPT**, on the criterion declared in advance. But the
+  mechanic is now *characterised* rather than rejected, and that is the useful
+  output: the project has two calibrated and opposite levers on the
+  accessibility-versus-depth axis, both measured at 350 seeds on the same
+  encounter:
+
+  | lever | mid-rung | gap | effect |
+  |---|---|---|---|
+  | `hotThreshold: 0.75` | +7.4pp | −17.4pp | more accessible, less deep |
+  | `shovePushes` (re-tuned) | −11.7pp | +6.0pp | deeper, less accessible, richer verb |
+
+  Neither is adoptable without knowing which way this game should move, and that
+  is precisely the question a simulation cannot answer. They are now sitting
+  ready for the human playtest at the top of the queue. Confidence HIGH.

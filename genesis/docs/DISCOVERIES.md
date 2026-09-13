@@ -476,3 +476,37 @@ as a config flag rather than deleted from the code.
 > memoir. And re-run it whenever the instrument or the content underneath it
 > changes — a rejection is a measurement, and it inherits every flaw of the
 > apparatus that produced it.
+
+### D-028 — Identical numbers are a bug report
+
+**Evidence**: EXP-041's first search pass returned byte-identical panels for
+five, six and seven lobbers. The cause was two bugs in the experiment harness,
+not a property of the game: `score()` silently ignored the config it was handed,
+so the flag under test was never applied, and the encounter generator capped
+lobbers at one per wave, so every count above five built the same fight.
+
+Either bug alone yields a confident, completely false experiment. The natural
+write-up would have been "lobber count does not matter once displacement is on",
+which is exactly the kind of tidy negative result that gets believed.
+
+> **Principle**: when an experiment reports *no effect*, check that it varied
+> anything. Suspiciously round agreement between arms — identical, not merely
+> close — is a harness failure until proven otherwise. Cheapest test: print the
+> generated input, not just the output.
+
+### D-029 — The accessibility/depth axis now has two calibrated dials, and no answer
+
+**Evidence**: measured at 350 seeds on the same encounter. `hotThreshold: 0.75`
+moves the mid-rung +7.4pp and compresses the skill gap by 17.4pp.
+`shovePushes`, re-tuned into the target band, moves the mid-rung −11.7pp and
+widens the gap by 6.0pp while making `SHOVE` measurably richer (conditional
+shove entropy 1.46 → 1.54, tip kills 2.98 → 3.25).
+
+Both hit the difficulty target. They move the game in opposite directions along
+an axis the simulation cannot adjudicate, because "how hard should a
+competent-but-shallow player find this" is a question about people.
+
+> **Principle**: when experiments converge on a trade-off rather than an answer,
+> stop experimenting on that axis and *characterise the dials* instead. A
+> measured pair of opposite levers, with their costs priced, is a more useful
+> handoff than a third experiment that also cannot settle it.

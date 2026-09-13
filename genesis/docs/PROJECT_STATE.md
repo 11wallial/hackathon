@@ -2,7 +2,7 @@
 
 *What exists and works, as of 2026-09-13.*
 
-## The game — **OVERLOAD**, v1.2 prototype
+## The game — **OVERLOAD**, v1.3 prototype
 
 A turn-based tactical duel on a closed ring of 12 nodes. One integer per unit,
 `charge`, is simultaneously its ammunition, its power level and its death clock.
@@ -98,10 +98,12 @@ agent myopia. See D-015.
 4. **The target difficulty band is a taste call, not a measurement.** EXP-039
    hit 50-65% for the strongest agent because that band was written down first.
    Whether it is the *right* band is a judgement no simulation settles.
-5. **`shovePushes` is reopened.** EXP-040 retracted the reason it was killed —
-   it widens the skill gap rather than flattening it. Re-deriving `press`
-   around it is queued; if it lands in band, `SHOVE` becomes positional as well
-   as economic.
+5. **The accessibility/depth trade has two calibrated dials and no answer**
+   (Q7b). `hotThreshold: 0.75` moves the mid-rung +7.4pp and compresses the
+   skill gap 17.4pp; `shovePushes`, re-tuned into band, moves it −11.7pp and
+   widens the gap 6.0pp while making `SHOVE` measurably richer. Both hit the
+   difficulty target. Which direction the game should go is a question about
+   people, so both sit characterised and unadopted pending a playtest (D-029).
 
 ## The lab
 

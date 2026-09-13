@@ -38,24 +38,18 @@ by an agent:
 - the 50-65% target band adopted in EXP-039 is a **taste call**, honest only in
   that it was declared before sweeping.
 
+And now a third, which is really the same question: EXP-041 characterised two
+opposite dials on the accessibility/depth axis (`hotThreshold: 0.75` versus a
+re-tuned `shovePushes`), both in the difficulty band, neither adoptable without
+knowing which way the game should move (Q7b, D-029).
+
 One person, five runs of `surge` and five of `press`, thinking aloud, would
-settle both and is worth more than any further agent batch.
+settle all three and is worth more than any further agent batch. **Concretely,
+what to watch**: do they attempt two-action kills once the "What it takes" panel
+tells them one is available; do they ever carry charge near their own capacity
+on purpose; and does the mid-game read as fair or as opaque.
 
-### 2. EXP-041 — Re-derive `press` around `shovePushes`
-
-EXP-040 retracted the rationale for killing displacement: against a working
-instrument it *widens* the skill gap (27.1pp → 30.3pp) while lifting the whole
-ladder, rather than flattening it as EXP-019 claimed. It was not adopted only
-because it overshoots the target band on an encounter calibrated without it —
-which is a tuning objection, not a design one.
-
-Re-derive `press` with `shovePushes: true` using the EXP-039 machinery and the
-same declared target. If it lands in band with a ladder at least as good as the
-current one, the verb becomes positional as well as economic — which is a large
-increase in what `SHOVE` does per rule, the standard this project has used for
-mechanical density since the start.
-
-### 3. EXP-031 — Re-tune `surge` against the improved agent
+### 2. EXP-031 — Re-tune `surge` against the improved agent
 
 The strongest agent now wins 78% (it won 41% two batches ago) and the encounter
 has not moved. Difficulty numbers measured against a weaker agent are stale.
