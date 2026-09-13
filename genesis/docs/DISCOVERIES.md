@@ -510,3 +510,28 @@ competent-but-shallow player find this" is a question about people.
 > stop experimenting on that axis and *characterise the dials* instead. A
 > measured pair of opposite levers, with their costs priced, is a more useful
 > handoff than a third experiment that also cannot settle it.
+
+### D-030 — The hardest target sets the accessibility floor; the threats set the ceiling
+
+**Evidence**: across fourteen siphon-heavy and warden-heavy configurations the
+one-move planner scored **0-3%**, including at difficulty settings where the
+strongest agent was in band. A drone-only roster — every target finishable in a
+single turn — handed the same agent **17-71%**, but could not threaten a strong
+player at any density (93-98%). A mixed roster with one expensive target per
+wave behind a screen of cheap ones restored both (`garden`: 53% / 26% / 3%).
+
+The mechanism is the win condition. "Clear the board" means a single target that
+no one turn can finish locks a shallow planner out of *winning*, however well it
+plays everything else — and D-019 already showed that committing to a
+multi-action kill is exactly the thing a one-move planner cannot do.
+
+Two consequences. **Accessibility is a roster property, not a difficulty knob**:
+you cannot make a fight of high-capacity enemies approachable by slowing it
+down. And **the two are separable** — cheap targets give a shallow player a
+foothold without capping how hard the fight can get, because the difficulty
+comes from the threatening units instead.
+
+> **Principle**: when a difficulty curve turns into a step, look at the *cheapest*
+> thing on the board before touching any number. If nothing there can be
+> finished inside one commitment, the step is in the roster, and no pacing
+> change will move it.

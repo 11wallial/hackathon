@@ -43,6 +43,43 @@ export const pressGen = ({ lobbers = 3, cadence = 4, lobCharge = 6, extra = 0 })
 // D-021 says a mixed panel cannot localise a skill. The honest middle rung is a
 // depth-1 searcher with the same evaluation as the strong agent: someone who
 // plays well but does not plan two moves ahead.
+// Siphon-heavy: high-capacity scavengers that load themselves off the floor,
+// so the natural line is bait-then-tip rather than direct delivery.
+export const siphonGen = ({ cadence = 4, siphons = 2, extra = 1, sCharge = 4, ramp = 2 }) => ({
+  name: `garden-s${siphons}-c${cadence}-x${extra}-b${sCharge}`,
+  waves: Array.from({ length: 5 }, (_, i) => ({
+    turn: 1 + cadence * i,
+    units: [
+      ...Array(siphons).fill({ kind: 'siphon', charge: sCharge + i * ramp }),
+      ...Array(extra).fill({ kind: 'drone', charge: 3 + i }),
+    ],
+  })),
+});
+
+// Warden-heavy: slow, high-capacity, and they do NOT scavenge, so nothing
+// loads itself and every point of charge has to be delivered by hand.
+export const wardenGen = ({ cadence = 4, wardens = 2, extra = 1, wCharge = 5, ramp = 1 }) => ({
+  name: `bulwark-w${wardens}-c${cadence}-x${extra}-b${wCharge}`,
+  waves: Array.from({ length: 5 }, (_, i) => ({
+    turn: 1 + cadence * i,
+    units: [
+      ...Array(wardens).fill({ kind: 'warden', charge: wCharge + i * ramp }),
+      ...Array(extra).fill({ kind: 'drone', charge: 3 + i }),
+    ],
+  })),
+});
+
+// Drone-only: every target is cheap enough that a single turn's throughput can
+// finish one. Built to test whether a shallow planner's win rate is gated by the
+// *hardest* target in the roster rather than by the mix (EXP-032).
+export const droneGen = ({ cadence = 3, perWave = 4, ramp = 1 }) => ({
+  name: `probe-d${perWave}-c${cadence}`,
+  waves: Array.from({ length: 6 }, (_, i) => ({
+    turn: 1 + cadence * i,
+    units: Array(perWave).fill({ kind: 'drone', charge: 2 + i * ramp }),
+  })),
+});
+
 const PANEL = ['random', 'conservative', 'neutralD1', 'miner', 'optimizerNeutral', 'optimizerDeep'];
 
 export function score(enc, seeds = 150, needNearOverload = false, config = {}) {

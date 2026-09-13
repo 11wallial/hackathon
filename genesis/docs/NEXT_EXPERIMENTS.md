@@ -49,7 +49,18 @@ what to watch**: do they attempt two-action kills once the "What it takes" panel
 tells them one is available; do they ever carry charge near their own capacity
 on purpose; and does the mid-game read as fair or as opaque.
 
-### 2. EXP-031 — Re-tune `surge` against the improved agent
+### 2. EXP-042 — A fourth shape, built around the cheap end
+
+D-030 says accessibility is a roster property: the hardest target sets the floor,
+the threatening ones set the ceiling. `garden`, `surge` and `press` all lean on
+expensive targets for difficulty. The untested quadrant is a shape whose
+difficulty comes from *threat* while every target stays cheap — drones plus
+lobbers, no siphons or wardens. Drone-only could not challenge a strong player
+(93-98%) and lobbers alone are `press`; the combination is the obvious gap, and
+if it lands in band it would be the most accessible shape in the set and a
+fourth genuinely independent point for the replication gate.
+
+### 3. EXP-031 — Re-tune `surge` against the improved agent
 
 The strongest agent now wins 78% (it won 41% two batches ago) and the encounter
 has not moved. Difficulty numbers measured against a weaker agent are stale.

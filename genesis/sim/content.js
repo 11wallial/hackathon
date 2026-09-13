@@ -27,6 +27,11 @@ export const ARCHETYPES = {
 // A wave injects charge into the encounter; this is the escalation lever.
 // Encounters are named so experiments can compare like with like.
 export const ENCOUNTERS = {
+  // NOT CONTENT — a deliberately retained low-CCR control. It holds 17 charge
+  // and clearing it requires delivering 47, so it is unwinnable by construction
+  // (EXP-013). Kept because it is the cleanest demonstration in the project that
+  // an encounter can be impossible for arithmetic reasons that no rule fixes.
+  // Do not include it in the replication gate.
   // The standard test bed for batch 1.
   probe: {
     name: 'probe',
@@ -103,12 +108,21 @@ export const ENCOUNTERS = {
     ],
   },
 
-  // Siphon-heavy: isolates the board-as-bank / bait layer.
+  // Rebuilt in EXP-032. One fat scavenger per wave inside a screen of drones:
+  // the siphon loads itself off whatever is on the floor and has to be tipped,
+  // while the drones give a shallow planner targets it can actually finish.
+  // That ratio is the whole design — see D-030. A roster made *only* of
+  // high-capacity targets locks a one-move planner out entirely (measured at
+  // 0-3% across fourteen configurations), because clearing the board requires
+  // committing to kills that no single turn can complete.
   garden: {
     name: 'garden',
     waves: [
-      { turn: 1, units: [{ kind: 'siphon' }, { kind: 'siphon' }, { kind: 'drone' }] },
-      { turn: 9, units: [{ kind: 'siphon' }] },
+      { turn: 1, units: [{ kind: 'siphon', charge: 2 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }, { kind: 'drone', charge: 3 }] },
+      { turn: 4, units: [{ kind: 'siphon', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }, { kind: 'drone', charge: 4 }] },
+      { turn: 7, units: [{ kind: 'siphon', charge: 6 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }, { kind: 'drone', charge: 5 }] },
+      { turn: 10, units: [{ kind: 'siphon', charge: 8 }, { kind: 'drone', charge: 6 }, { kind: 'drone', charge: 6 }, { kind: 'drone', charge: 6 }, { kind: 'drone', charge: 6 }, { kind: 'drone', charge: 6 }] },
+      { turn: 13, units: [{ kind: 'siphon', charge: 10 }, { kind: 'drone', charge: 7 }, { kind: 'drone', charge: 7 }, { kind: 'drone', charge: 7 }, { kind: 'drone', charge: 7 }, { kind: 'drone', charge: 7 }] },
     ],
   },
 };

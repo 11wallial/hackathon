@@ -1373,3 +1373,87 @@ that were quietly setting fire to their own capacity.
   Neither is adoptable without knowing which way this game should move, and that
   is precisely the question a simulation cannot answer. They are now sitting
   ready for the human playtest at the top of the queue. Confidence HIGH.
+
+---
+
+## Batch 15 — EXP-032, four real encounter shapes
+
+### EXP-032 — Rebuild `probe` and `garden` as content
+
+- **Context**: D-014 made replication across encounter shapes a standing gate,
+  and it has already caught a 99% do-nothing walkover that was invisible on the
+  shape a rule was developed against. But the gate currently runs against **two**
+  real shapes plus two pre-CCR relics that are unwinnable by construction
+  (`probe` at CCR 0.36, `garden` at 0.17). Half the gate is decoration.
+- **Question**: can they be rebuilt as encounters that are both *winnable* and
+  *mechanically distinct*?
+- **The criterion that matters, and it is not difficulty**: four encounters that
+  all play the same way are not a replication gate, they are one encounter with
+  four names. So beyond hitting the EXP-039 target band, each new shape must
+  differ **measurably** from `surge` and `press` on at least one quality metric
+  — tip kills, near-overload, feed ratio, chain rate — not merely in its roster.
+- **Design**: `probe` becomes **siphon-heavy** (capacity 14, scavenges, so the
+  natural line is loading it off the floor and tipping it); `garden` becomes
+  **warden-heavy** (capacity 10, slow, does *not* scavenge, so charge has to be
+  delivered by hand).
+- **Hypothesis**:
+  1. siphon-heavy produces markedly **higher tip kills** than `press` and lower
+     near-overload — its whole shape rewards the load-then-tip line;
+  2. warden-heavy produces **lower tip kills and a higher feed ratio** — nothing
+     loads itself, so charge goes in directly;
+  3. both land in band with two or three lobber-free waves of pressure.
+- **Risk being watched**: siphon-heavy is the composition most likely to
+  reproduce D-024 — siphons eat loose charge, and a board that disposes of its
+  own threats rewards passivity. **If the turtle clears 5%, reject regardless of
+  how good the ladder looks.**
+- **Measurement**: EXP-039 machinery; 150 seeds to search, 350 on finalists.
+- **Result**: one shape built, the other proven **impossible**, and the reason is
+  the most useful thing in the batch.
+
+  Across fourteen configurations of siphon-heavy and warden-heavy rosters, the
+  mid-rung sat at **0-3% in every single one**, including settings where the
+  strongest agent was squarely in band (58%, 59%, 41%, 59%). `surge` and `press`
+  give the same agent 18.7% and 33.7%. Tuning did not move it.
+
+  A direct test isolated the cause. A **drone-only** roster — every target cheap
+  enough for one turn's throughput to finish — hands the mid-rung **17-71%**.
+  But drones cannot threaten a strong player at any density tested (93-98%).
+
+  So the two properties come from different parts of the roster: **the hardest
+  target sets the accessibility floor; the threatening targets set the
+  difficulty ceiling.** The win condition is "clear the board", so a single
+  target that no one turn can finish locks a shallow planner out of *winning*
+  however well it plays everything else.
+
+  The implied fix worked immediately. A mixed roster — one expensive target per
+  wave behind a screen of drones — lands in band with the mid-rung restored:
+  `garden` at 53% / 26% / 3% (350 seeds).
+
+  Warden-emphasis stayed impossible across nine further configurations: every
+  setting that brought the strongest agent into band pushed the mid-rung under
+  15%. Wardens are the most expensive target in the game, so they set the
+  highest floor. That is a structural limit, not a failure to tune harder.
+
+  Hypothesis scoring: (1) **half right** — siphon-emphasis does produce higher
+  tip kills than `press` (5.11 vs 3.00) but *lower* than `surge` (10.30), which
+  we did not predict; drone-dense shapes generate the most tip kills because
+  cheap targets tip easily. (2) **untestable** — warden-emphasis never reached a
+  valid configuration. (3) **confirmed** for one family, refuted for the other.
+  The watched D-024 risk did not fire: turtle 3%.
+
+### v1.4 — the replication gate now runs against three real shapes (300 seeds)
+
+| shape | random | turtle | mid-rung | deep | **neutral** | tip kills | near-overload |
+|---|---|---|---|---|---|---|---|
+| `surge` | 0% | 2% | 19% | 31% | **63%** | 10.30 | 40% |
+| `press` | 1% | 3% | 32% | 24% | **60%** | 3.00 | 54% |
+| `garden` | 1% | 3% | 26% | 45% | **53%** | 5.11 | 46% |
+
+Three separated tip-kill profiles, three different mid-rungs, and `garden` is
+the shape where fearing overload costs least (deep 45% against neutral 53%,
+versus a 32pp gap on `surge`). `probe` is relabelled in `content.js` as what it
+actually is — a deliberately retained low-CCR control, unwinnable by
+construction, explicitly excluded from the gate.
+- **Decision**: **ADOPT** `garden`. **ABANDON** warden-emphasis as a shape, with
+  the structural reason recorded. Gate goes from two real shapes to three.
+  Confidence HIGH.
