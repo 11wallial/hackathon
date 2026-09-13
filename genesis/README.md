@@ -16,7 +16,9 @@ shove.
 Picking charge up off the floor fills you to capacity and leaves the rest, so
 nothing ever dies by accident — **only a deliberate transfer can kill**. That
 makes the floor a loading mechanism rather than a weapon: fatten a target from a
-pile until it runs hot, then tip it over with one point of your own.
+pile until it runs hot, then tip it over with one point of your own. And there are two ways for a thing to
+stop existing: give it more than it can hold, or let it spend itself to nothing
+— so an enemy that has emptied itself into you does not die, it goes shopping.
 
 ## Play it
 
@@ -46,21 +48,22 @@ reproducible from these commands.
 
 ## Read the notebook
 
-Start with **`docs/DISCOVERIES.md`** — eleven principles that were *earned*,
-each naming its evidence. Then:
+Start with **`docs/DISCOVERIES.md`** — fourteen principles that were *earned*,
+each naming its evidence, including one marked **FALSIFIED** and kept as a
+correction. Then:
 
 | File | What it holds |
 |---|---|
 | `docs/PROJECT_STATE.md` | what exists, what is proven, and the top defect |
 | `docs/DESIGN_THESIS.md` | current belief + two dated revisions, with what was falsified |
-| `docs/EXPERIMENTS.md` | 19 experiments, hypotheses pre-registered before each run |
-| `docs/GRAVEYARD.md` | seven killed mechanics and exactly why each failed |
-| `docs/OPEN_QUESTIONS.md` | the six unresolved questions, ranked |
+| `docs/EXPERIMENTS.md` | 25 experiments, hypotheses pre-registered before each run |
+| `docs/GRAVEYARD.md` | ten killed mechanics, why each failed — and one resurrection |
+| `docs/OPEN_QUESTIONS.md` | the unresolved questions, ranked |
 | `docs/NEXT_EXPERIMENTS.md` | the ranked queue |
 | `docs/MECHANIC_GENEALOGY.md` | where each mechanic came from and what it mutated into |
 | `docs/METRICS.md` | telemetry definitions |
 
-## Two findings worth the click
+## Three findings worth the click
 
 **The winning strategy was an accident.** `SHOVE` was designed as the attack and
 loose charge on the floor was a side effect. Measurement said the reverse: 74%
@@ -71,6 +74,13 @@ placed, and the agent that only ever attacked directly won 6% of the time.
 encounter contained 17 charge and destroying every enemy required delivering 47.
 No rule change could fix that; computing the ratio took five minutes and
 reframed the entire design.
+
+**A whole batch was spent fixing a mechanism that was not happening.** A 36%
+deadlock rate, identical at turn limit 45 and 120, was confidently diagnosed as
+a charge oscillation. Two rules were built against it and both made it worse.
+Then somebody traced the board: nine units on twelve nodes, nothing moving, a
+spent drone standing as a permanent wall. It was a traffic jam. That entry is
+kept in `DISCOVERIES.md` marked **FALSIFIED** rather than deleted.
 
 ## Architecture
 

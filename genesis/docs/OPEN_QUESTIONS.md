@@ -15,13 +15,13 @@ the real drama lives in the enemies' capacity, not the player's. The second
 answer is legitimate — the game plays well already — but it means rewriting a
 third of the thesis. **Do not tune this further; decide it.**
 
-### Q2 — What is the irreversible move that ends a deadlock?
+### Q2 — What ends a deadlock? — **ANSWERED** (EXP-022, EXP-025)
 
-D-010: 36% of encounters are a fixed point immune to time. Candidates, cheapest
-first: a spill on transfer (part of every shove lands on the floor instead of
-the target); a stagger (a unit that was shoved cannot shove back this round);
-asymmetric throughput; or replacing "clear the board" with an objective that
-cannot be stalled. Each one is a different game — this is a fork, not a tweak.
+It was never irreversibility. The deadlock was a traffic jam of spent bodies
+(D-012), and both proposed fixes failed because they attacked an oscillation
+that was not happening. Dissolving units that hold no charge took timeouts
+40.8% → 24.5%. *Residual*: 24.5% still do not resolve, and we have not traced
+one of those. Do that before proposing anything.
 
 ### Q3 — Should absorption be a choice?
 
@@ -37,11 +37,26 @@ good human. Its evaluation contains a fear-of-overload term, which means it is
 not independent evidence for Q1. A search with a purely outcome-based evaluation
 would be a fairer instrument.
 
-### Q5 — Does any of this survive a second encounter shape?
+### Q5 — Does any of this survive a second encounter shape? — **PARTLY ANSWERED**
 
-Every batch-3-onward result is from one encounter (`surge`) on a 12-node ring.
-`probe`, `swarm` and `garden` exist and are untested under v0.5 rules. Findings
-that do not replicate across encounter shapes are findings about `surge`.
+EXP-024 ran the panel across all four encounters and immediately caught a
+degenerate walkover (turtle 99% on `swarm`) that was invisible on `surge`. It is
+now a standing gate before adopting any rule (D-014).
+
+What it also revealed: `probe` (CCR 0.36) and `garden` (CCR 0.17) are
+unwinnable under every configuration — they are pre-CCR test beds from v0.1 and
+should be relabelled as low-CCR controls rather than treated as content. We have
+therefore validated across *two* real shapes, not four. Ring sizes 8 and the
+rest of the geometry sweep are still untested.
+
+### Q7 — Is the mastery gap becoming an accessibility problem? *(new)*
+
+`hungryEnemies` (EXP-025) cost the middle of the ladder far more than the top:
+the optimizer lost 1pp while the explicit expert policy lost 14pp on `surge` and
+37pp on `swarm`. The v0.6 ladder is 61.5 / 24.5 / 17.0 / 8.0 / 5.8 / 2.0, which
+is a healthy spread — but the trend of the last two batches is that rules which
+widen the gradient do it by punishing competent-but-not-searching play. A human
+lives in that middle band. Worth watching, not yet acting on.
 
 ### Q6 — Where does progression live?
 

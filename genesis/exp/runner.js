@@ -57,7 +57,7 @@ export function aggregate(runs) {
 
   const actions = {}, shoveAmounts = {}, chains = {}, shoveByBand = {}, killCause = {};
   let wins = 0, timeouts = 0, losses = 0, turns = 0, detonations = 0, enemyDet = 0, selfDet = 0;
-  let baitKills = 0, tipKills = 0, chargeToEnemies = 0, chargeShoved = 0, motesAtEnd = 0;
+  let baitKills = 0, tipKills = 0, starved = 0, chargeToEnemies = 0, chargeShoved = 0, motesAtEnd = 0;
   let nearOverload = 0, playerTurns = 0, stepChoices = 0, stepTowardMotes = 0;
   let violations = 0, overflow = 0, maxChain = 0, chainRuns = 0, distinct = 0;
   const bandTurns = [0, 0, 0, 0];
@@ -77,7 +77,7 @@ export function aggregate(runs) {
       add(shoveByBand[band], m);
     }
     detonations += st.detonations; enemyDet += st.enemyDetonations; selfDet += st.selfDetonations;
-    baitKills += st.baitKills; tipKills += st.tipKills; chargeToEnemies += st.chargeToEnemies;
+    baitKills += st.baitKills; tipKills += st.tipKills; starved += st.starved; chargeToEnemies += st.chargeToEnemies;
     chargeShoved += st.chargeShovedTotal; motesAtEnd += st.motesAtEnd;
     nearOverload += st.nearOverloadTurns; playerTurns += st.playerTurns;
     stepChoices += st.stepChoices; stepTowardMotes += st.stepTowardMotes;
@@ -123,6 +123,7 @@ export function aggregate(runs) {
     selfDetonationsPerRun: selfDet / n,
     baitKillsPerRun: baitKills / n,
     tipKillsPerRun: tipKills / n,
+    starvedPerRun: starved / n,
     chainRate: chainRuns / n,
     chainShare: cascades ? chainedTotal / cascades : 0,
     maxChain,
@@ -159,6 +160,7 @@ export function fmt(tag, a) {
     'chain', pct(a.chainRate),
     'bait', a.baitKillsPerRun.toFixed(2),
     'tip', a.tipKillsPerRun.toFixed(2),
+    'starve', a.starvedPerRun.toFixed(2),
     'self', a.selfDetonationsPerRun.toFixed(2),
     'feed', pct(a.feedRatio),
     'viol', String(a.conservationViolations),

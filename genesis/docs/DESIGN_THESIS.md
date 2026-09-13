@@ -159,3 +159,35 @@ The unfinished sentence in that thesis is the player's own capacity. Right now
 it is a wall they stand well clear of, not a clock. Q1 decides whether we find
 the pressure that makes it a clock, or move that tension onto the enemies and
 say so honestly.
+
+### R3 — 2026-09-13, after batches 6-7 (EXP-020..025)
+
+**One claim retracted outright.** R2 asserted that conservation permits a stable
+charge oscillation and that the game therefore needed an irreversible move
+(D-010). That was wrong. Two rules were designed against it and both made things
+worse; a trace of a deadlocked board showed no exchanges happening at all. The
+real cause was mundane and physical — a **traffic jam of spent bodies** (D-012).
+The correction matters more than the fix did: we reasoned about a mechanism for
+a whole batch without looking at one.
+
+**One addition, and it was already implied.** A unit holding no charge holds
+nothing, so removing it costs conservation exactly zero. Dissolving spent bodies
+took timeouts from 40.8% to 24.5% and, unexpectedly, made the game's signature
+mechanic *stronger* (tip kills 3.61 → 5.09, chains in 98.8% of runs). It also
+opened a second way to kill — **starve instead of overfill** — which is the
+first genuinely new strategic axis since the floor.
+
+> **Thesis v0.4** (additions to v0.3 in bold). Charge is a single finite thing
+> that is ammunition, power and mortality at once, and it only ever changes
+> hands. You do not damage an enemy — you **overfill** it. The floor is the
+> shared, contested bank everything draws from; loading a target from it is
+> free, but the last point has to come from you. **And there are two ways for a
+> thing to stop existing: give it more than it can hold, or let it spend itself
+> to nothing. Everything on the board is hungry, so an enemy that has emptied
+> itself does not die — it goes shopping.** Escalation is a denser field, not a
+> bigger one.
+
+Still unfinished, and now for the fourth time: the player's own capacity. It is
+a wall they stand clear of, not a clock. Q1 remains the decision this design
+most needs, and dissolution did not answer it — giving the player a reason to
+soak charge still did not make them soak it. D-008 holds.

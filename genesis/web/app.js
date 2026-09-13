@@ -9,8 +9,8 @@ import {
 const R = 12;
 const KIND_LABEL = { player: 'You', drone: 'Drone', siphon: 'Siphon', warden: 'Warden' };
 const KIND_HINT = {
-  drone: 'walks at you and shoves what it has',
-  siphon: 'ignores you, eats loose charge, huge capacity',
+  drone: 'walks at you and shoves what it has, then goes looking for more',
+  siphon: 'ignores you, eats loose charge, huge capacity — a bomb you can build',
   warden: 'slow, arrives full, hits hard',
 };
 
@@ -153,7 +153,8 @@ function previewOf(action) {
   }
   const pile = state.ring[n] + action.amount;
   return `Put <b>${action.amount}</b> on node ${n} (pile becomes <b>${pile}</b>). ` +
-    `Anything that steps there fills up from it — that is how you load a target before tipping it over.` +
+    `Anything that steps there fills up from it — that is how you load a target before tipping it over. ` +
+    `Leaving nothing on the floor starves them instead, which is slower but costs you nothing.` +
     (action.dir === 0 ? ' You are standing on it; step off or you will take it back at the end of the round.' : '');
 }
 
@@ -182,6 +183,8 @@ function drainEvents() {
     const e = state.events[seen];
     if (e.type === 'detonate') {
       logLine(`<b>${e.kind === 'player' ? 'You overload' : KIND_LABEL[e.kind] + ' goes over capacity'}</b> on node ${e.node} and detonates for <b>${e.payload}</b>${e.survived ? ' — you survive, capacity permanently reduced' : ''}.`, e.kind === 'player' ? 'bad' : 'boom');
+    } else if (e.type === 'dissolve') {
+      logLine(`<b>${KIND_LABEL[e.kind]}</b> on node ${e.node} has held nothing for too long and dissolves.`, '');
     } else if (e.type === 'spawn' && e.kind !== 'player') {
       logLine(`Wave: <b>${KIND_LABEL[e.kind]}</b> arrives on node ${e.node} holding ${e.charge} — ${KIND_HINT[e.kind]}.`, '');
     } else if (e.type === 'shove' && e.target && name(e.id) !== 'You') {

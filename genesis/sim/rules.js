@@ -66,6 +66,7 @@ function blankStats() {
     maxChain: 0,
     baitKills: 0,
     tipKills: 0,
+    starved: 0,
     motesAtEnd: 0,
     deathCause: null,
     killCause: {},
@@ -150,6 +151,8 @@ function spawnUnit(s, kind, node, team, chargeOverride) {
     killedByBait: false,
     floorFed: 0,
     lastCause: 'spawn',
+    staggeredTurn: -1,
+    zeroSince: -1,
   };
   s.units.push(u);
   s.injected += u.charge;
@@ -325,7 +328,8 @@ export function legalActions(s) {
     const n = mod(p.node + dir, s.config.ringSize);
     if (!unitAt(s, n)) acts.push({ type: 'step', dir });
   }
-  const maxAmt = Math.min(p.throughput, p.charge);
+  const staggered = s.config.staggerOnShove && p.staggeredTurn === s.turn;
+  const maxAmt = staggered ? 0 : Math.min(p.throughput, p.charge);
   for (const dir of [-1, 0, 1]) {
     for (let a = 1; a <= maxAmt; a++) acts.push({ type: 'shove', dir, amount: a });
   }
@@ -382,7 +386,10 @@ export function applyAction(s, action) {
     }
     emit(s, { type: 'shove', id: p.id, dir: action.dir, amount, target: target ? target.id : null });
     if (target) {
-      giveCharge(s, target, amount, false, 'shove-player');
+      const spill = Math.floor(amount * s.config.spillFraction);
+      if (spill > 0) dropMotes(s, n, spill, true);
+      giveCharge(s, target, amount - spill, false, 'shove-player');
+      if (s.config.staggerOnShove) target.staggeredTurn = s.turn + 1;
       if (target.alive) displace(s, target, action.dir);
     } else dropMotes(s, n, amount, true);
   } else {
@@ -419,11 +426,31 @@ function enemyPhase(s) {
   }
 
   if (s.config.settleMotes) settle(s);
+  if (s.config.dissolveAfter >= 0) dissolveSpent(s);
 
   s.turn++;
   processWaves(s);
   s.actionsLeft = playerActionsFor(s);
   if (s.turn > s.config.turnLimit && !s.result) finish(s, 'timeout');
+  checkEnd(s);
+}
+
+// A unit that has held nothing for long enough stops existing. Conservation is
+// untouched — it has no charge to redistribute — and the ring gets its node back.
+function dissolveSpent(s) {
+  for (const u of s.units) {
+    if (!u.alive || u.team === 'player') continue;
+    if (u.charge > 0) { u.zeroSince = -1; continue; }
+    if (u.zeroSince < 0) u.zeroSince = s.turn;
+    if (s.turn - u.zeroSince >= s.config.dissolveAfter) {
+      u.alive = false;
+      if (s.stats) {
+        s.stats.starved++;
+        s.stats.killCause.starved = (s.stats.killCause.starved || 0) + 1;
+      }
+      emit(s, { type: 'dissolve', id: u.id, kind: u.kind, node: u.node });
+    }
+  }
   checkEnd(s);
 }
 
@@ -450,6 +477,7 @@ function moveUnit(s, u, dir) {
 }
 
 function enemyShove(s, u, dir) {
+  if (s.config.staggerOnShove && u.staggeredTurn === s.turn) return false;
   const R = s.config.ringSize;
   const amount = Math.min(u.throughput, u.charge);
   if (amount <= 0) return false;
@@ -458,7 +486,10 @@ function enemyShove(s, u, dir) {
   u.charge -= amount;
   emit(s, { type: 'shove', id: u.id, dir, amount, target: target ? target.id : null });
   if (target) {
-    giveCharge(s, target, amount, false, 'shove-enemy');
+    const spill = Math.floor(amount * s.config.spillFraction);
+    if (spill > 0) dropMotes(s, n, spill, false);
+    giveCharge(s, target, amount - spill, false, 'shove-enemy');
+    if (s.config.staggerOnShove) target.staggeredTurn = s.turn + 1;
     if (target.alive) displace(s, target, dir);
   } else dropMotes(s, n, amount, false);
   return true;
@@ -494,8 +525,8 @@ function aiChase(s, u) {
   }
   if (ringDist(u.node, p.node, R) === 1) {
     const dir = towards(u.node, p.node, R);
-    if (u.charge > 0) enemyShove(s, u, dir);
-    return; // spent chasers become walls: legible, and positionally meaningful
+    if (u.charge > 0 && enemyShove(s, u, dir)) return;
+    return; // spent or staggered chasers become walls: legible, and positional
   }
   if (!canMoveThisTurn(s, u)) return;
   const dir = towards(u.node, p.node, R);

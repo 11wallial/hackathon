@@ -141,19 +141,22 @@ empties itself in one blow. Big hitters disarm themselves. This is a genuinely
 pleasant property — you can never be burst down out of nowhere — but it means
 the obvious lever for "make the player feel pressure" points the wrong way.
 
-### D-010 — Conservation permits a stable deadlock that time cannot break
+### D-010 — ~~Conservation permits a stable charge oscillation~~ **FALSIFIED**
 
-**Evidence**: timeout rate is **36-37% at every turn limit from 45 to 120**.
+**Original claim**: timeout rate is 36-37% at every turn limit from 45 to 120,
+therefore two adjacent units must be passing the same charge back and forth in a
+fixed point that time cannot break.
 
-Two adjacent units with charge can pass the same charge back and forth forever;
-each transfer is exactly undone by the reply. Because nothing decays and nothing
-is created, this is a genuine fixed point. Raising the turn limit changes only
-how long the player watches it.
+**Disproof**: EXP-020 (make transfers lossy) and EXP-021 (forbid the immediate
+reply) both attacked that oscillation and both made timeouts *worse*. Then a
+trace of a deadlocked board (seed 1000, turns 37-45) showed nothing moving at
+all — no exchanges were happening. The observation was right and the mechanism
+was invented. See D-012 for what is actually going on.
 
-> **Principle**: a conserved system needs at least one *irreversible* move, or
-> some states are unreachable from others and the game cannot be finished.
-> This is the same insight as D-001 arriving from the other side: conservation
-> forbids explosions and climaxes alike, and you have to put one back.
+**Kept as a correction, not deleted.** Two rules were designed and tested
+against a mechanism nobody had looked at, and the cost was a whole batch. The
+turn-limit invariance was real evidence of *a* fixed point; naming which fixed
+point required opening the board.
 
 ### D-011 — Adding reach to a verb can subtract tension
 
@@ -168,3 +171,57 @@ so it flattens the difference between good and bad positioning.
 
 > **Principle**: before adding an ability, ask what it does for the player who
 > is losing. That is usually what it will actually be used for.
+
+### D-012 — The deadlock was a traffic jam, and spent bodies were the cause
+
+**Evidence**: trace of seed 1000, turns 37-45: `DRO4/6 SIP9/14 DRO5/6 WAR8/10
+DRO5/6 DRO2/6 . DRO0/6 YOU5/10 . SIP10/14 WAR9/10` — nine units on twelve
+nodes, every action `end turn`, nothing moving for nine consecutive rounds.
+Removing spent units (EXP-022) took timeouts 40.8% → 20.0%; adding nodes
+instead (EXP-023) changed nothing.
+
+Bodies block absolutely, so as unit count approaches node count the ring
+freezes. Chasers queue behind each other and the ones at the back can never
+reach anything. Worst of all, a chaser that has shoved its last charge is
+harmless *and permanent* — it can never be killed, because killing means
+overfilling and nobody has a reason to spend charge on a threat that is already
+neutralised. The encounter's win condition then cannot be met.
+
+The fix was already implied by the model: a unit holding no charge holds
+nothing, so removing it costs conservation exactly zero.
+
+> **Principle**: in a game where bodies occupy space, ask what happens to the
+> ones that stop being threats. If they neither leave nor can be removed, they
+> are furniture, and enough furniture is a deadlock. And note the shape of the
+> error: adding space (D-023) treats the symptom, removing the dead treats the
+> cause.
+
+### D-013 — A correctly killed mechanic can become correct later
+
+**Evidence**: `hungryEnemies` was killed in EXP-007 (timeouts 69.6% → 86.0%,
+skill gradient 5.1x → 1.1x). Resurrected unchanged in EXP-025 it took the
+turtle agent on `swarm` from 99% to 28% and *raised* tip kills from 4.38 to
+5.04.
+
+Nothing about the rule changed. Its world did. In EXP-007 the floor **killed**,
+so foragers suicided into piles and unskilled agents got free kills. Under
+`absorbCap` the floor **loads**, so a forager fills to capacity and survives —
+doing the player's setup work for them and arriving hot-and-brittle.
+
+> **Principle**: graveyard entries should record the *conditions* a mechanic
+> failed under, not just the verdict. A rule that fails is often a rule whose
+> preconditions are absent. Re-read the graveyard whenever a precondition
+> changes.
+
+### D-014 — Replicate across shapes before adopting, or you will ship a walkover
+
+**Evidence**: dissolution looked like an unambiguous win on `surge` (timeouts
+40.8% → 20.0%, every secondary metric up). On drone-only `swarm` the same rule
+took the do-nothing agent to **99%**.
+
+One encounter shape is one sample. The failure was not subtle — it was total —
+and it was invisible on the shape the rule was developed against.
+
+> **Principle**: a rule is adopted against the *panel of encounters*, never
+> against the one you were looking at. Cheap to run, and it caught a degenerate
+> walkover that would otherwise have become the baseline.

@@ -464,3 +464,198 @@ D-010 and Q2, and it is the defect at the top of the queue.
    local patches that all failed; the win came from stepping back and computing
    the energy budget instead. That pattern is worth remembering: when three
    rule tweaks in a row fail, the model of the problem is wrong.
+
+---
+
+## Batch 6 — pre-registered 2026-09-13, before either rule was written
+
+Target: the top defect (D-010 / Q2). 36% of encounters are a fixed point immune
+to time — two adjacent units pass the same charge back and forth, each transfer
+exactly undone by the reply. A conserved system needs at least one
+**irreversible** move or some states cannot be reached from others.
+
+### EXP-020 — Transfer spill
+
+- **Question**: does making every transfer slightly lossy break the fixed point?
+- **Hypothesis**: a fraction of each shove landing on the floor at the target's
+  node makes an exchange non-undoable, so the oscillation drains instead of
+  cycling. We predict the optimizer's timeout rate falls **below 20%** (from
+  40.3%), its win rate rises, and `tipKills` rise because the floor fills faster
+  from ordinary combat rather than only from detonations.
+- **Risk being watched**: it taxes the player's own mine-building, which is the
+  strongest strategy. If `tipKills` *fall* while timeouts improve, we have
+  traded the best mechanic for pacing and should reject it.
+- **Change**: `spillFraction` ∈ {0, 0.25, 0.5}.
+- **Measurement**: timeout/win/loss across the panel, tipKills, skill gradient.
+- **Result**: falsified. Optimizer timeouts **rose** 40.8% → 45.2% at spill 0.25
+  (predicted below 20%) and win rate was flat. At spill 0.5 the game stopped
+  entirely: **every agent 100% timeout, zero detonations**.
+- **Interpretation**: two things went wrong, and the second is our fault.
+  First, the diagnosis: spill reduces *delivery*, and the spill-0.5 collapse
+  shows delivery is what resolves encounters — so the deadlock cannot be an
+  oscillation, or making exchanges lossy would have drained it.
+  Second, the implementation was not a fair test: `floor(amount × fraction)`
+  means a shove of 1 spills nothing, and the agents immediately found that
+  (mean shove size fell to 1.46 at spill 0.5). We built a tax that is free to
+  dodge and then measured the dodge. A fair version would spill a flat amount
+  per action. We are not rerunning it, because EXP-022 identified the actual
+  cause and this rule addresses something that is not happening.
+- **Decision**: **KILL**. Confidence HIGH on the diagnosis, LOW that the
+  mechanic itself was fairly tested.
+
+### EXP-021 — Stagger
+
+- **Question**: does forbidding the immediate reply break the fixed point?
+- **Hypothesis**: a unit that received a shove cannot shove on its next action,
+  so the exchange cannot be symmetric. We predict a **larger** drop in timeouts
+  than EXP-020. But by the mechanical-density standard this is the worse fix
+  even if it scores better: spill pays into the floor economy that the rest of
+  the design runs on, while stagger does one job and nothing else. We will
+  prefer spill unless stagger wins clearly on the skill gradient too.
+- **Change**: `staggerOnShove: true` (symmetric — applies to the player as well).
+- **Measurement**: as above.
+- **Result**: falsified in the same direction. Optimizer timeouts 40.8% →
+  **57.6%** and win rate 40.8% → 20.4%; gradient collapsed from 3.0x to 1.7x.
+- **Interpretation**: same root error as EXP-020 — it reduces the rate at which
+  charge gets delivered, and delivery is what ends encounters. Two independently
+  motivated fixes failing in the same direction is the signal that the model of
+  the problem is wrong, which is the pattern already recorded after batch 2. We
+  stopped proposing rules and went to look at a deadlocked board instead.
+- **Decision**: **KILL**. Confidence HIGH.
+
+### EXP-022 — Dissolution: a unit holding nothing is nothing
+
+- **Context**: EXP-020 and EXP-021 both failed, and the trace of seed 1000
+  (turns 37-45, nothing moves at all) shows why. The deadlock is **not** charge
+  oscillation as D-010 claimed. It is a **traffic jam**: bodies block absolutely,
+  late `surge` has 9 units on 12 nodes, chasers queue behind each other, and
+  spent drones sitting at 0 charge are permanent walls that can never be cleared.
+  Both previous "fixes" reduced delivery, which is why they made it worse.
+- **Question**: if a unit at zero charge is removed, does the ring unjam — and
+  does a second way to kill appear?
+- **Hypothesis**: a unit holding no charge holds nothing, so removing it costs
+  conservation nothing. We predict (1) optimizer timeout rate falls **below
+  20%** from 40.8%; (2) a second kill path appears — starvation should account
+  for **more than 15%** of kills, since chasers empty themselves into the player
+  by design; (3) **and this is the interesting one** — because absorbing an
+  enemy's attack is now progress toward killing it, the player has a reason to
+  soak charge, so top-quartile charge occupancy rises above 8% from 2.6%. That
+  would be the first mechanism to answer Q1, and it would arrive from a rule we
+  added for an unrelated reason.
+- **Risk being watched**: starving may dominate overfilling and kill the
+  tip-kill mechanic, which is currently what the game is about. If `tipKills`
+  collapse, this is a downgrade whatever it does to pacing.
+- **Change**: `dissolveAfter` ∈ {0, 1} rounds at zero charge.
+- **Measurement**: timeouts, kill-cause attribution incl. new `starved`,
+  chargeBand, tipKills, skill gradient.
+- **Result**: prediction (1) confirmed — optimizer timeouts 40.8% → **20.0%**
+  at `dissolveAfter: 1` and win rate 40.8% → 66.8%. Prediction (2) confirmed —
+  starvation appears as a kill path. The **watched risk did not materialise and
+  inverted**: `tipKills` *rose*, 3.61 → 4.64, and chains went from 71.6% to
+  98.0% of runs. Prediction (3) was **not** supported: top-quartile charge
+  occupancy moved only 2.6% → 3.6%, nowhere near the predicted 8%.
+  A grace-period sweep (0, 1, 2, 3, 5, 8, 12, 20 rounds) found a broad plateau
+  rather than a knife edge: timeouts stay near 21% across the whole range, while
+  longer grace steadily suppresses free wins (random 25.6% → 1.2%, turtle
+  18.4% → 1.2%). `dissolveAfter: 8` was selected: optimizer 58%, miner 30%,
+  greedy 24%, random 7%, turtle 5% — the first monotone five-rung skill ladder
+  the project has produced.
+- **Interpretation**: the fix works and it was cheap, but the honest summary is
+  that the *diagnosis* was the hard part and we got it wrong twice before
+  looking at a board. Note also that Q1 is still not answered: dissolution gave
+  the player a reason to soak charge and they still did not do it. D-008 holds.
+- **Decision**: **KEEP**, paired with EXP-025. Confidence HIGH.
+
+### EXP-023 — Ring size (the control for EXP-022)
+
+- **Question**: is dissolution doing anything that simply adding space does not?
+- **Hypothesis**: enlarging the ring to 16 or 20 nodes relieves the jam too, so
+  timeouts fall — but it is a pure dilution that adds no decision, and we
+  predict it will *not* move the charge band or produce a second kill path.
+  If ring size matches dissolution on every measure, prefer ring size as the
+  simpler change; if it only fixes pacing, dissolution is the better rule.
+- **Change**: `ringSize` ∈ {12, 16, 20}.
+- **Result**: falsified, and this is the useful part. Ring 16 barely moved
+  anything (optimizer timeouts 40.8% → 37.6%) and ring 20 was slightly *worse*
+  (41.6%), with no change to the charge band and no second kill path.
+- **Interpretation**: the jam is not geometric. Chasers pack against the player
+  wherever the player is, so adding nodes adds empty ring behind the queue, not
+  room inside it. This is exactly the control the experiment existed to provide:
+  it rules out "just add space" and isolates dissolution as the real fix rather
+  than a dressed-up dilution.
+- **Decision**: **KILL** ring size as a fix; keep `ringSize` as a dial.
+  Confidence HIGH.
+
+### EXP-025 — Resurrecting `hungryEnemies` under v0.6 conditions
+
+- **Context**: EXP-022's replication check (EXP-024) found dissolution is not
+  universally safe: on drone-only `swarm` it takes the turtle agent to **99%**,
+  because drones empty themselves into the player and then dissolve. The
+  encounter solves itself. Dissolution alone is not adoptable.
+- **Question**: `hungryEnemies` was KILLED in EXP-007. Every reason it failed
+  has since been removed — back then the floor *killed* (enemies suicided into
+  piles, which helped unskilled agents) and mines were the player's win
+  condition. Under `absorbCap` a foraging enemy **fills to capacity and
+  survives**, which loads it into hot-and-brittle, i.e. it does the player's
+  setup work for them. Does the same rule now help?
+- **Hypothesis**: pairing it with dissolution restores the threat that
+  dissolution removes — an emptied chaser goes shopping instead of evaporating,
+  and only dissolves when there is genuinely nothing left to pick up. We predict
+  the turtle's win rate on `swarm` falls **below 25%** from 99%, that the skill
+  gradient on `surge` does **not** collapse the way it did in EXP-007 (optimizer
+  ÷ random stays above 5x), and that `tipKills` rise, because self-loading
+  enemies are easier to tip.
+- **Risk being watched**: the EXP-007 failure mode returning — foragers stealing
+  the player's staged charge. If the optimizer's win rate drops sharply while
+  random's rises, it is the same failure and dissolution must be reconsidered
+  instead.
+- **Change**: `hungryEnemies: true` together with `dissolveAfter: 8`.
+- **Result**: on `swarm` the turtle fell **99% → 28%** and random **49% → 8%**.
+  (The prediction said "below 25%" for the turtle; 28% is a near miss in the
+  right direction, recorded as a miss.) On `surge`, `tipKills` rose 4.38 → 5.04
+  as predicted, and the optimizer ÷ random gradient widened 8.5x → 29.2x.
+  The EXP-007 failure mode did **not** return for the strongest agent
+  (optimizer 60% → 59%) but it partly returned for the middle of the ladder:
+  the miner fell 31% → 17% on `surge` and 90% → 53% on `swarm`, because
+  foragers steal the charge it stages.
+- **Interpretation**: confirmed, with a real cost recorded. A mechanic that was
+  correctly killed can become correct later when its preconditions change —
+  `hungryEnemies` failed in a world where the floor killed things, and works in
+  a world where the floor loads them. The cost is that it punishes the
+  merely-competent policy harder than the strong one, which widens the mastery
+  gap; whether that is a feature or an accessibility problem is now Q7.
+- **Decision**: **KEEP**. Adopted as v0.6 defaults with `dissolveAfter: 8`.
+  Confidence MEDIUM-HIGH (two encounter shapes).
+
+### EXP-024 — Replication across encounter shapes *(the check that saved EXP-022)*
+
+- **Question**: does dissolution hold up outside `surge`?
+- **Result**: **no**, and running this before adopting the rule is the only
+  reason we found out. On drone-only `swarm`, dissolution alone took the turtle
+  agent to **99%** — a completely degenerate encounter — because drones empty
+  themselves into the player and then evaporate. `probe` (CCR 0.36) and
+  `garden` (CCR 0.17) stayed unwinnable under every configuration, exactly as
+  EXP-013 predicts: they are starved of energy, and no rule fixes arithmetic.
+- **Interpretation**: a headline result measured on one encounter shape is a
+  result about that shape. `probe` and `garden` are pre-CCR test beds from v0.1
+  and should be relabelled as low-CCR controls rather than treated as content.
+- **Decision**: **KEEP** replication as a standing gate before adopting any
+  rule. Confidence HIGH.
+
+---
+
+## v0.6 — final panel (400 seeds, `surge`, adopted defaults)
+
+| agent | win | loss | timeout | tip kills | chains |
+|---|---|---|---|---|---|
+| random | 2.0% | 22.5% | 75.5% | 1.17 | 20.0% |
+| explorer | 5.8% | 20.3% | 74.0% | 1.93 | 29.0% |
+| conservative (turtle) | 8.0% | 46.3% | 45.8% | 1.61 | 58.5% |
+| miner | 17.0% | 36.5% | 46.5% | 2.58 | 70.3% |
+| greedy | 24.5% | 62.7% | 12.8% | 2.88 | 78.5% |
+| **optimizer** | **61.5%** | 14.0% | 24.5% | **5.09** | **98.8%** |
+
+Versus v0.5: timeouts 40.8% → 24.5%, optimizer 40.8% → 61.5%, tip kills
+3.61 → 5.09, chains 71.6% → 98.8% of runs. Shove-amount entropy is unchanged at
+1.93 with conditional entropy 1.81, so the decision diversity survived the
+change. Conservation violations: 0.

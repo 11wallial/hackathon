@@ -17,7 +17,10 @@ enemy bodies** (encounter `surge`) kept the ramp and killed the exploit — and
 gave a better curve, since late enemies arrive hot *and* brittle.
 *Revisit if*: absorption is ever made deliberate rather than automatic.
 
-### `hungryEnemies` — spent chasers forage — **KILLED** (EXP-007)
+### `hungryEnemies` — spent chasers forage — **KILLED (EXP-007), then RESURRECTED (EXP-025)**
+
+> **Status: alive again, unchanged, and now a default.** See the note at the end
+> of this entry. This is the entry that justifies keeping a graveyard.
 
 *Intuition*: D-001 said a conserved economy needs circulation; empty enemies
 were inert furniture.
@@ -25,8 +28,17 @@ were inert furniture.
 collapsed from 5.1x to 1.1x. Foragers eat the charge the player is staging, so
 mine-building becomes unreliable, while dumb agents benefit from enemies
 suiciding into random piles. It helped exactly the agents it should have hurt.
-*Salvaged*: nothing directly. The circulation diagnosis was itself wrong — the
-real constraint was the energy budget (EXP-013).
+*Salvaged*: nothing, at the time. The circulation diagnosis was itself wrong —
+the real constraint was the energy budget (EXP-013).
+
+*Conditions under which it might become viable* (written at kill time, and this
+is the part that paid off): "if enemies can no longer kill themselves on loose
+charge". That is exactly what `absorbCap` (EXP-014) did. Under v0.6 a forager
+fills to capacity and **survives**, arriving hot-and-brittle — it stages the
+player's kill instead of stealing it. Resurrected in EXP-025 with no change to
+the rule at all: turtle on `swarm` 99% → 28%, tip kills 4.38 → 5.04. See D-013.
+Known cost: it punishes the middle of the skill ladder hardest (miner 31% → 17%
+on `surge`), which is now Q7.
 
 ### `settleMotes` — charge under a body is absorbed at end of round — **KILLED** (EXP-008)
 
@@ -63,6 +75,34 @@ halved to 8.5% and greedy jumped to 30.5%, narrowing the gradient. Adding reach
 to a verb subtracted tension.
 *Revisit if*: we want a deliberately safer, more puzzle-like variant, or if
 displacement is made costly.
+
+### `spillFraction` — transfers leak onto the floor — **KILLED** (EXP-020)
+
+*Intuition*: D-010 said the deadlock was a charge oscillation, so make exchanges
+non-undoable.
+*What failed*: timeouts rose (40.8% → 45.2%), and at spill 0.5 the game stopped
+completely — every agent 100% timeout, zero detonations.
+*Two separate errors, both worth remembering*: the diagnosis was invented rather
+than observed (D-010 is now marked falsified), and the implementation was
+dodgeable — `floor(amount × fraction)` means a shove of 1 spills nothing, and
+the agents immediately switched to shoving 1s. We measured our own loophole.
+*Revisit if*: a flat per-action spill is ever wanted as an economy tax, for a
+reason other than the deadlock.
+
+### `staggerOnShove` — no immediate reply — **KILLED** (EXP-021)
+
+Same wrong diagnosis, same direction of failure: timeouts 40.8% → 57.6%,
+optimizer win halved. Both this and spill reduce the rate at which charge gets
+*delivered*, and delivery is what ends encounters. Two independently motivated
+fixes failing identically is the tell that the model is wrong — that is when we
+stopped writing rules and traced a deadlocked board.
+
+### Ring size as a deadlock fix — **KILLED** (EXP-023)
+
+Enlarging the ring from 12 to 16 or 20 nodes moved timeouts by 3pp and 20 was
+*worse* than 12. Chasers pack against the player wherever the player is, so
+extra nodes add empty ring behind the queue, not room inside it. Valuable as the
+control that ruled out "just add space" and isolated dissolution as the real fix.
 
 ### `bomber` agent — **KILLED**
 
