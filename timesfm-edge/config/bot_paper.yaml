@@ -1,0 +1,20 @@
+# STAGE 1: simulated broker. No keys, no account, no real or fake-money orders anywhere.
+# The paper broker fills at the next open with the cost model below and simulates stops from each
+# day's high/low. This is where to watch the machinery work, and where the 5 sessions of history
+# that live mode asks for begins.
+name: bot_paper
+run_config: config/xs_equity_1d_timesfm25.yaml     # data source, universe, model and cost model
+capital: 100000
+risk:
+  max_capital: 100000                              # hard ceiling; the bot never deploys more than this
+  daily_loss_limit: 0.02                           # halt at -2% of the day's starting equity
+  max_drawdown_halt: 0.10                          # halt at -10% from the equity peak
+book:
+  top_fraction: 0.2                                # long the top 20% of the universe, short the bottom 20%
+  gross: 1.0                                       # total |exposure| as a multiple of capital
+  rebalance_every: 1
+broker:
+  kind: paper
+live:
+  require_approval: false                          # paper runs hands-off; set true to practise the approval step
+smoothing_halflife: 5.0

@@ -7,3 +7,5 @@ reports/*.png
 reports/*.json
 !reports/experiment_ledger*.json
 reports/compare/
+state/
+reports/live/

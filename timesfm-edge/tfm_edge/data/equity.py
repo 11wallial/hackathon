@@ -112,7 +112,8 @@ def fetch_yahoo(symbol: str, years: float, session: requests.Session | None = No
 
 
 def fetch_equity_bars(symbol: str, source: str = "stooq", years: float = 20.0,
-                      cache_dir: str = "cache/data", session: requests.Session | None = None) -> pd.DataFrame:
+                      cache_dir: str = "cache/data", session: requests.Session | None = None,
+                      max_age_hours: float | None = None) -> pd.DataFrame:
     """One symbol's adjusted daily bars, cached as parquet.
 
     Bars are NOT gap-validated the way crypto bars are: equity markets are closed at
@@ -123,7 +124,12 @@ def fetch_equity_bars(symbol: str, source: str = "stooq", years: float = 20.0,
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / f"equity_{source}_{symbol.upper()}_1d.parquet"
     if path.exists():
-        return pd.read_parquet(path)
+        # Research runs reuse the cache forever. A bot must not: a cache older than
+        # max_age_hours is refetched, and if the refetch fails the error propagates, because
+        # trading on yesterday's bars as if they were today's is worse than not trading.
+        age_h = (time.time() - path.stat().st_mtime) / 3600.0
+        if max_age_hours is None or age_h <= max_age_hours:
+            return pd.read_parquet(path)
     df = fetch_stooq(symbol, session) if source == "stooq" else fetch_yahoo(symbol, years, session)
     df["open_time"] = pd.to_datetime(df["open_time"]).dt.tz_localize(None).dt.normalize()
     df = df.sort_values("open_time").drop_duplicates("open_time").reset_index(drop=True)
@@ -177,7 +183,8 @@ def build_membership(times: pd.DatetimeIndex, symbols: list[str],
 
 def equity_panel(symbols: list[str], source: str = "stooq", years: float = 20.0,
                  cache_dir: str = "cache/data", universe_path: str | None = None,
-                 min_names_per_bar: int = 10, log=print) -> Panel:
+                 min_names_per_bar: int = 10, log=print,
+                 max_age_hours: float | None = None) -> Panel:
     """Union of trading days across names, with a membership mask.
 
     Unlike the crypto panel this does NOT intersect: intersecting would throw away every
@@ -187,7 +194,7 @@ def equity_panel(symbols: list[str], source: str = "stooq", years: float = 20.0,
     frames, failed = {}, {}
     for s in symbols:
         try:
-            frames[s.upper()] = fetch_equity_bars(s, source, years, cache_dir)
+            frames[s.upper()] = fetch_equity_bars(s, source, years, cache_dir, max_age_hours=max_age_hours)
         except Exception as e:                              # a dead ticker is data, not a crash
             failed[s.upper()] = f"{type(e).__name__}: {e}"
     if failed:
@@ -205,19 +212,24 @@ def equity_panel(symbols: list[str], source: str = "stooq", years: float = 20.0,
     syms = sorted(frames)
     lc = np.full((len(idx), len(syms)), np.nan)
     lo = np.full((len(idx), len(syms)), np.nan)
+    lh = np.full((len(idx), len(syms)), np.nan)
+    ll = np.full((len(idx), len(syms)), np.nan)
     for j, s in enumerate(syms):
         d = frames[s].set_index("open_time").reindex(idx)
         lc[:, j] = np.log(d["close"].to_numpy(float))
         lo[:, j] = np.log(d["open"].to_numpy(float))
+        lh[:, j] = np.log(d["high"].to_numpy(float))
+        ll[:, j] = np.log(d["low"].to_numpy(float))
 
     mask = build_membership(idx, syms, load_universe(universe_path)) & np.isfinite(lc)
     keep = mask.sum(axis=1) >= min_names_per_bar
     if keep.sum() < 250:
         raise ValueError(f"only {keep.sum()} bars have {min_names_per_bar}+ names")
     idx, lc, lo, mask = idx[keep], lc[keep], lo[keep], mask[keep]
+    lh, ll = lh[keep], ll[keep]
     times = idx.to_numpy(dtype="datetime64[ns]")
     p = Panel(open_time=times, close_time=times, log_close=lc, log_open=lo,
-              symbols=syms, bar="1d", mask=mask)
+              symbols=syms, bar="1d", mask=mask, log_high=lh, log_low=ll)
     if universe_path is None:
         log("  WARNING: no point-in-time universe file. Every name in this panel is one "
             "that still exists today, so its history is conditioned on survival. Treat "

@@ -8,8 +8,9 @@ than the stage it needs):
     features/   point-in-time windows and log-return targets, timestamped by knowability
     model/      forecaster protocol, TimesFM wrapper, statistical baselines, forecast cache
     analysis/   purged walk-forward, metrics, multiple-testing ledger, gate, reports
-    decision/   (Phase 2, gated) pure decision function
-    risk/       (Phase 2, gated) brackets, limits, kill switch
-    execution/  (Phase 2, gated) paper and live adapters, ledger
+    decision/   pure decision function (parity-tested against the backtest's book)
+    risk/       limits, halts, entry brackets
+    execution/  paper and Alpaca brokers, engine, ledger, scheduler, preflight
+    ui/         local control panel
 """
 __version__ = "0.1.0"

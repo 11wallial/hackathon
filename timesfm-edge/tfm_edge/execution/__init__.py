@@ -1,1 +1,1 @@
-"""Phase 2 (gated). Intentionally empty until Phase 1's gate passes."""
+"""Execution: brokers, the plan/approve/execute/reconcile engine, the ledger, scheduler and preflight."""

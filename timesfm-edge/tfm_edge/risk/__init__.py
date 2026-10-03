@@ -1,1 +1,1 @@
-"""Phase 2 (gated). Intentionally empty until Phase 1's gate passes."""
+"""Risk: account and plan limits (limits.py) and entry brackets (brackets.py). Pure functions."""

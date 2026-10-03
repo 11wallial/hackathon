@@ -33,6 +33,9 @@ class Panel:
     # acquired and drop out of the index, and a panel that ignores that is a list of
     # survivors, which is the single largest source of fake alpha in equity research.
     mask: np.ndarray | None = None
+    # Optional session range, for simulating stop and target fills. Absent for synthetic panels.
+    log_high: np.ndarray | None = None
+    log_low: np.ndarray | None = None
 
     @property
     def n_bars(self) -> int:

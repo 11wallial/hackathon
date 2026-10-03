@@ -4,9 +4,9 @@ Does a time-series foundation model (TimesFM 2.5 / 3.0) have an exploitable
 directional edge on a financial instrument? This repo is built to answer that
 question adversarially. A clean negative is a successful outcome.
 
-Phase 1 (the gate) is complete and validated. Phase 2 (decision, risk,
-execution) is **deliberately not built**: `decision/`, `risk/` and `execution/`
-contain only a note saying so, and `analysis/phase1.py` imports nothing from them.
+Phase 1 (the gate) is complete and validated on synthetic data. Phase 2 (the bot) is built
+and tested but, per the spec, sits behind the gate: it has never been given a real-data edge
+measurement to stand on. `analysis/phase1.py` still imports nothing from it.
 
 > **Read [`SETUP.md`](SETUP.md) before running anything.** The first pass at this
 > project needed a 73.8% hit rate to break even, which no model clears. That hurdle
@@ -16,6 +16,31 @@ contain only a note saying so, and `analysis/phase1.py` imports nothing from the
 > on inference, because arithmetic can rule a setup out in a second.
 
 ![feasibility](reports/feasibility.png)
+
+## The bot
+
+Phase 2 is built: forecaster, a pure decision function, a risk layer, paper and Alpaca execution, a
+ledger, a daily divergence report, a scheduler and a local control panel.
+
+```bash
+./run_bot.sh                              # paper: preflight, then UI + scheduler on http://127.0.0.1:8765
+python -m tfm_edge preflight --config config/bot_live.yaml
+```
+
+**Read [`RUNBOOK.md`](RUNBOOK.md) first.** The gate has not been run on real data, so there is no
+measured edge. Live mode refuses to start without a passing real-data report and five paper sessions
+unless you name each override in the config; both are logged on every run.
+
+| piece | where |
+|---|---|
+| pure decision function (parity-tested against the backtest's book) | `decision/book.py` |
+| limits, halts, entry brackets and the barrier-geometry note | `risk/limits.py`, `risk/brackets.py` |
+| paper simulator and Alpaca adapter | `execution/broker.py` |
+| plan, approve, execute, reconcile, kill switch, live clearance | `execution/engine.py` |
+| ledger of every forecast, decision, order, fill | `execution/store.py` |
+| scheduler, preflight GO/NO-GO | `execution/daemon.py`, `execution/preflight.py` |
+| live vs ideal vs backtest | `analysis/divergence.py` |
+| local control panel | `ui/server.py`, `ui/index.html` |
 
 ## Assumed parameters
 
@@ -201,9 +226,10 @@ tfm_edge/analysis/    feasibility arithmetic, walk-forward, metrics, deflated Sh
                       turnover-aware portfolio, ledger, gates, reports, entry points
                       (phase1 = single instrument, panel_run = cross-sectional,
                        compare_setups = same edge across setups)
-tfm_edge/decision/    gated (empty)
-tfm_edge/risk/        gated (empty)
-tfm_edge/execution/   gated (empty)
+tfm_edge/decision/    the pure decision function
+tfm_edge/risk/        limits, halts, entry brackets
+tfm_edge/execution/   brokers, engine, ledger, scheduler, preflight
+tfm_edge/ui/          local control panel
 tests/                46 tests: leak detection, purge/embargo, bootstrap coverage, calibration,
                       gate logic, ledger persistence, feasibility identities, turnover
                       accounting, deflated-Sharpe behaviour, cross-sectional leak detection,
