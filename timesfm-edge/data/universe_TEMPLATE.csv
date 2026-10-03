@@ -1,0 +1,19 @@
+symbol,start_date,end_date
+# One row per membership spell. Blank end_date means "still a member".
+# A name that left and rejoined gets two rows.
+#
+# Without this file every name in the panel is one that still exists today, so its
+# whole history is conditioned on survival. That is the largest source of fake alpha
+# in equity research and it is easy to commit by accident.
+#
+# Where to get a real one, cheapest first:
+#   - Wikipedia "List of S&P 500 companies" has a changes table with add/remove dates.
+#     Scrape it and unroll into spells. Good back to roughly 2000, free.
+#   - CRSP, Compustat, Sharadar SF1, or Norgate Data sell proper constituent history
+#     including delisted tickers, which Wikipedia does not have.
+#   - Any index provider's historical constituent files.
+#
+# The rows below are a shape example only. Delete them and supply your own.
+AAPL,2000-01-01,
+MSFT,2000-01-01,
+GE,2000-01-01,2018-06-26

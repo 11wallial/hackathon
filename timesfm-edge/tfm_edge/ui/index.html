@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="tfm-token" content="__TFM_TOKEN__">
+<title>TimesFM bot</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --panel: #ffffff; --line: #e4e3df; --ink: #0b0b0b; --ink2: #52514e; --ink3: #7d7c77;
+    --blue: #2a78d6; --orange: #eb6834; --green: #0a7d3c; --red: #c4262e; --amber: #a86400;
+    --chip-paper: #0a7d3c; --chip-apaper: #2a78d6; --chip-live: #c4262e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141413; --panel: #1c1c1b; --line: #33322f; --ink: #f4f3ee; --ink2: #b9b8ae; --ink3: #8a897f;
+            --blue: #3987e5; --orange: #d95926; --green: #34b36b; --red: #ef5a62; --amber: #e0a030; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 650; }
+  .chip { color: #fff; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; letter-spacing: .04em; }
+  .chip.paper { background: var(--chip-paper); } .chip.alpaca_paper { background: var(--chip-apaper); } .chip.alpaca_live { background: var(--chip-live); }
+  .spacer { flex: 1; }
+  .clock { color: var(--ink2); font-variant-numeric: tabular-nums; }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--ink3); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.danger { background: var(--red); border-color: var(--red); color: #fff; font-weight: 650; }
+  button.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+  .banner { padding: 10px 20px; font-weight: 650; }
+  .banner.halt { background: var(--red); color: #fff; }
+  .banner.live { background: var(--amber); color: #fff; }
+  main { padding: 16px 20px 40px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); max-width: 1500px; margin: 0 auto; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink2); margin: 0 0 10px; font-weight: 650; display: flex; gap: 10px; align-items: center; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 600; color: var(--ink2); font-size: 12px; padding: 4px 8px 4px 0; border-bottom: 1px solid var(--line); }
+  td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--line); }
+  td.n, th.n { text-align: right; }
+  .scroll { overflow-x: auto; max-height: 360px; overflow-y: auto; }
+  .pass { color: var(--green); } .fail { color: var(--red); } .warn { color: var(--amber); }
+  .muted { color: var(--ink2); } .small { font-size: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 6px 0; }
+  .kv div:nth-child(odd) { color: var(--ink2); }
+  .status { font-weight: 700; padding: 1px 8px; border-radius: 4px; border: 1px solid var(--line); }
+  .status.pending { color: var(--amber); } .status.approved, .status.executed { color: var(--green); }
+  .status.blocked, .status.expired, .status.rejected { color: var(--red); }
+  ul.notes { margin: 6px 0 6px 18px; padding: 0; } ul.notes li { margin: 2px 0; }
+  .ev-error, .ev-critical { color: var(--red); } .ev-warn { color: var(--amber); }
+  svg text { fill: var(--ink2); font-size: 11px; }
+  .toast { position: fixed; bottom: 16px; right: 16px; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 8px; max-width: 420px; display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="name">TimesFM bot</h1>
+  <span id="mode" class="chip"></span>
+  <span id="clock" class="clock"></span>
+  <span class="spacer"></span>
+  <span id="job" class="muted small"></span>
+  <button id="b-kill" class="danger">KILL</button>
+  <button id="b-flatten" class="danger">KILL + FLATTEN</button>
+  <button id="b-resume">Resume…</button>
+</header>
+<div id="banners"></div>
+<main>
+  <section id="s-plan" class="wide"></section>
+  <section id="s-clear"></section>
+  <section id="s-perf"></section>
+  <section id="s-pos" class="wide"></section>
+  <section id="s-plans"></section>
+  <section id="s-events"></section>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+"use strict";
+const TOKEN = document.querySelector('meta[name="tfm-token"]').content;
+// every element is built with textContent: nothing from a broker, a symbol or a log line is ever parsed as HTML
+const h = (tag, props, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return e;
+};
+const money = x => x == null ? "–" : (x < 0 ? "−$" : "$") + Math.abs(x).toLocaleString(undefined, {maximumFractionDigits: 0});
+const money2 = x => x == null ? "–" : (x < 0 ? "−$" : "$") + Math.abs(x).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const pct = (x, d = 2) => x == null ? "–" : (x * 100).toFixed(d) + "%";
+const bps = x => x == null ? "–" : (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1);
+const sgn = x => x == null ? "–" : (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2);
+const icon = s => s === "pass" ? "✓" : s === "fail" ? "✗" : "!";
+
+let S = null, busy = false;
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = "none", 6000); }
+
+async function api(action, body) {
+  const r = await fetch("/api/" + action, {method: "POST", headers: {"Content-Type": "application/json", "X-TFM-Token": TOKEN}, body: JSON.stringify(body || {})});
+  const j = await r.json().catch(() => ({error: "bad response"}));
+  if (!r.ok || j.ok === false) { toast(j.error || ("error " + r.status)); }
+  await refresh();
+  return j;
+}
+async function refresh() {
+  try { const r = await fetch("/api/state"); S = await r.json(); render(); }
+  catch (e) { document.getElementById("clock").textContent = "disconnected"; }
+}
+
+function render() {
+  if (!S || S.error) { toast(S && S.error); return; }
+  document.getElementById("name").textContent = S.name;
+  const m = document.getElementById("mode");
+  m.textContent = S.is_live ? "LIVE · REAL MONEY" : S.mode === "paper" ? "PAPER · SIMULATED" : "ALPACA PAPER";
+  m.className = "chip " + S.mode;
+  document.getElementById("clock").textContent = S.now_et;
+  document.getElementById("job").textContent = S.job_running ? "running: " + S.job.name + "…" : (S.job ? "last: " + S.job.name + " " + S.job.status : "");
+  const b = document.getElementById("banners"); b.replaceChildren();
+  if (S.kill) b.append(h("div", {class: "banner halt"}, "TRADING HALTED: " + S.kill.reason + (S.kill.source === "file" ? "  (KILL file: remove it from a shell to resume)" : "")));
+  if (S.is_live && !S.require_approval) b.append(h("div", {class: "banner live"}, "Live plans execute WITHOUT human approval."));
+  document.getElementById("b-resume").disabled = !S.kill || S.kill.source === "file";
+  renderPlan(); renderClear(); renderPerf(); renderPos(); renderPlans(); renderEvents();
+}
+
+function renderPlan() {
+  const el = document.getElementById("s-plan"); el.replaceChildren();
+  const p = S.plan;
+  el.append(h("h2", {}, "Next plan",
+    h("span", {class: "row"},
+      h("button", {onclick: () => api("plan", {}), disabled: S.job_running || !!S.kill}, "Plan now"),
+      h("button", {onclick: () => api("reconcile", {}), disabled: S.job_running}, "Reconcile"),
+      h("button", {onclick: () => api("preflight", {}), disabled: S.job_running}, "Preflight"),
+      h("button", {onclick: () => api("execute", {}), disabled: S.job_running || !!S.kill || !p || p.status !== "approved"}, "Execute approved now"))));
+  if (!p) { el.append(h("p", {class: "muted"}, "No plan yet. Plans are made after the close, once the day's bars are published. Press “Plan now” after 16:20 ET.")); return; }
+  el.append(h("div", {class: "row"},
+    h("span", {class: "status " + p.status}, p.status.toUpperCase()),
+    h("span", {}, `decided on the ${p.asof} close, to trade at the ${p.for_date} open`),
+    p.approved_by ? h("span", {class: "muted"}, "approved by " + p.approved_by) : null));
+  if (p.reasons && p.reasons.length || (p.status === "blocked" && p.note)) {
+    el.append(h("ul", {class: "notes"}, (p.reasons && p.reasons.length ? p.reasons : [p.note]).map(r => h("li", {class: "fail"}, r))));
+  }
+  if (p.violations && p.violations.length) el.append(h("ul", {class: "notes"}, p.violations.map(v => h("li", {class: "fail"}, v))));
+  if (p.decision) {
+    const d = p.decision;
+    el.append(h("div", {class: "kv"},
+      h("div", {}, "Book"), h("div", {}, `${d.n_long} long / ${d.n_short} short, gross ${d.gross.toFixed(2)}, net ${sgn(d.net)}, capital ${money(p.capital)}`),
+      h("div", {}, "Turnover"), h("div", {}, `${pct(d.turnover)} of capital; ${d.names_changed} names change (${pct(d.fraction_changed, 0)} of the universe); ${p.n_orders} orders, ${money(p.gross_traded)} traded`),
+      h("div", {}, "Data"), h("div", {}, `${p.coverage != null ? pct(p.coverage, 0) : "–"} coverage · model ${p.model || "–"} · fingerprint ${p.fingerprint || "–"}`)));
+    if (d.notes && d.notes.length) el.append(h("ul", {class: "notes small"}, d.notes.map(n => h("li", {class: "muted"}, n))));
+  }
+  if (p.status === "pending") {
+    el.append(h("div", {class: "row"},
+      h("button", {class: "primary", onclick: () => approve(p), disabled: !!S.kill, title: S.kill ? "trading is halted" : ""}, `Approve ${p.n_orders} orders`),
+      h("button", {onclick: () => api("reject", {plan_id: p.id})}, "Reject"),
+      S.kill ? h("span", {class: "fail small"}, "trading is halted: nothing will execute until you resume") : null));
+  }
+  if (p.orders && p.orders.length) {
+    el.append(h("div", {class: "scroll"}, h("table", {},
+      h("thead", {}, h("tr", {}, ["Symbol", "Side", "Shares", "Ref price", "Notional", "From → to"].map((c, i) => h("th", {class: i > 1 ? "n" : ""}, c)))),
+      h("tbody", {}, p.orders.map(o => h("tr", {},
+        h("td", {}, o.symbol), h("td", {class: o.side === "buy" ? "pass" : "fail"}, o.side),
+        h("td", {class: "n"}, o.qty), h("td", {class: "n"}, money2(o.ref_price)), h("td", {class: "n"}, money(o.notional)),
+        h("td", {class: "n"}, `${o.from} → ${o.to}`)))))));
+  }
+  if (p.top && p.top.length) {
+    const rank = (rows) => h("table", {}, h("thead", {}, h("tr", {}, h("th", {}, "Symbol"), h("th", {class: "n"}, "Score"), h("th", {class: "n"}, "Fcst bps"))),
+      h("tbody", {}, rows.map(r => h("tr", {}, h("td", {}, r[0]), h("td", {class: "n"}, sgn(r[1])), h("td", {class: "n"}, bps(r[2]))))));
+    el.append(h("div", {class: "row small"}, h("div", {}, h("div", {class: "muted"}, "Most bullish"), rank(p.top)), h("div", {style: "width:24px"}), h("div", {}, h("div", {class: "muted"}, "Most bearish"), rank(p.bottom))));
+  }
+}
+function approve(p) {
+  const msg = `Approve ${p.n_orders} orders (${money(p.gross_traded)} traded) for the ${p.for_date} open?\nMode: ${S.mode}`;
+  if (S.is_live) { if (prompt(msg + "\n\nThis is REAL MONEY. Type APPROVE to continue.") !== "APPROVE") return; }
+  else if (!confirm(msg)) return;
+  api("approve", {plan_id: p.id});
+}
+
+function renderClear() {
+  const el = document.getElementById("s-clear"); el.replaceChildren();
+  el.append(h("h2", {}, S.is_live ? "Live clearance" : "Mode checks"));
+  el.append(h("ul", {class: "notes"}, S.clearance.map(c => h("li", {class: c.status}, `${icon(c.status)} ${c.name}: ${c.detail}`))));
+  const r = S.risk;
+  el.append(h("div", {class: "kv small"},
+    h("div", {}, "Capital ceiling"), h("div", {}, money(r.max_capital)),
+    h("div", {}, "Daily loss halt"), h("div", {}, pct(r.daily_loss_limit, 1)),
+    h("div", {}, "Drawdown halt"), h("div", {}, pct(r.max_drawdown_halt, 0)),
+    h("div", {}, "Gross / net / name"), h("div", {}, `${r.max_gross}× / ±${r.max_net} / ${pct(r.max_name, 1)}`),
+    h("div", {}, "Brackets"), h("div", {}, `stop ${r.stop_mult}σ, target ${r.target_mult}σ (daily)`),
+    h("div", {}, "On halt"), h("div", {}, r.flatten_on_halt ? "cancel orders and flatten" : "cancel entry orders, keep stops")));
+  if (S.job && S.job.name === "preflight" && S.job.result) {
+    const v = S.job.result;
+    el.append(h("h2", {style: "margin-top:14px"}, "Preflight: ", h("span", {class: v.verdict === "GO" ? "pass" : "fail"}, v.verdict)));
+    el.append(h("ul", {class: "notes small"}, v.checks.map(c => h("li", {class: c.status}, `${icon(c.status)} ${c.name}: ${c.detail}`))));
+  }
+}
+
+function renderPerf() {
+  const el = document.getElementById("s-perf"); el.replaceChildren();
+  el.append(h("h2", {}, "Account vs ideal book"));
+  const a = S.account;
+  el.append(h("div", {class: "kv"}, h("div", {}, "Equity"), h("div", {}, a ? money2(a.equity) : "–"), h("div", {}, "Cash"), h("div", {}, a ? money2(a.cash) : "–")));
+  if (S.broker_error) el.append(h("p", {class: "fail small"}, S.broker_error));
+  const d = S.divergence;
+  if (!d || !d.n) { el.append(h("p", {class: "muted"}, (d && d.note) || "Needs two sessions of history and one plan before the comparison means anything.")); return; }
+  el.append(lineChart([{label: "account", color: "var(--blue)", ys: d.actual_cum_bps}, {label: "ideal book", color: "var(--orange)", ys: d.shadow_cum_bps}], d.dates));
+  el.append(h("div", {class: "kv small"},
+    h("div", {}, `Sessions`), h("div", {}, d.n),
+    h("div", {}, "Account / ideal per day"), h("div", {}, `${bps(d.mean_actual_bps)} / ${bps(d.mean_shadow_bps)} bps`),
+    h("div", {}, "Gap per day"), h("div", {class: Math.abs(d.z_gap || 0) > 2 ? "warn" : ""}, `${bps(d.mean_gap_bps)} bps` + (d.z_gap != null ? `  (z ${sgn(d.z_gap)})` : "")),
+    h("div", {}, "vs backtest"), h("div", {}, d.expectation ? `expected ${bps(d.expectation.mean_bps)} bps/day` + (d.z_vs_backtest != null ? `, z ${sgn(d.z_vs_backtest)}` : "") : "no real-data Phase 1 report to compare")));
+  el.append(h("p", {class: "muted small"}, "A few days cannot confirm an edge. They can contradict one. Watch the gap first: it is what trading actually costs you versus the backtest's assumptions."));
+}
+function lineChart(series, labels) {
+  const W = 560, H = 200, L = 44, R = 118, T = 22, B = 22, NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", "100%");
+  const all = series.flatMap(s => s.ys).concat([0]); let lo = Math.min(...all), hi = Math.max(...all); if (hi - lo < 1) { hi += 1; lo -= 1; }
+  const n = labels.length, x = i => L + (n < 2 ? 0 : i * (W - L - R) / (n - 1)), y = v => T + (hi - v) * (H - T - B) / (hi - lo);
+  const mk = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (txt != null) e.textContent = txt; return e; };
+  svg.append(mk("line", {x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: "var(--line)"}));
+  for (const v of [lo, hi]) svg.append(mk("text", {x: L - 6, y: y(v) + 4, "text-anchor": "end"}, Math.round(v)));
+  svg.append(mk("text", {x: L, y: H - 6}, labels[0]), mk("text", {x: W - R, y: H - 6, "text-anchor": "end"}, labels[n - 1]));
+  svg.append(mk("text", {x: L, y: 12}, "cumulative bps of capital"));
+  for (const s of series) {
+    svg.append(mk("polyline", {fill: "none", stroke: s.color, "stroke-width": 2, points: s.ys.map((v, i) => `${x(i)},${y(v)}`).join(" ")}));
+    const last = s.ys[s.ys.length - 1];
+    svg.append(mk("text", {x: x(n - 1) + 6, y: y(last) + 4, style: "fill:" + s.color + ";font-weight:600"}, `${s.label} ${Math.round(last)}`));
+  }
+  return svg;
+}
+
+function renderPos() {
+  const el = document.getElementById("s-pos"); el.replaceChildren();
+  el.append(h("h2", {}, `Positions (${S.positions.length})`));
+  if (!S.positions.length) { el.append(h("p", {class: "muted"}, "Flat.")); return; }
+  const gross = S.positions.reduce((a, p) => a + Math.abs(p.value), 0), net = S.positions.reduce((a, p) => a + p.value, 0);
+  el.append(h("div", {class: "small muted"}, `gross ${money(gross)} · net ${money(net)} · unrealised ${money(S.positions.reduce((a, p) => a + p.pnl, 0))}`));
+  el.append(h("div", {class: "scroll"}, h("table", {},
+    h("thead", {}, h("tr", {}, ["Symbol", "Shares", "Avg", "Price", "Value", "Weight", "P&L", "Stop", "Target"].map((c, i) => h("th", {class: i ? "n" : ""}, c)))),
+    h("tbody", {}, S.positions.map(p => h("tr", {},
+      h("td", {}, p.symbol), h("td", {class: "n " + (p.qty > 0 ? "pass" : "fail")}, p.qty), h("td", {class: "n"}, money2(p.avg)), h("td", {class: "n"}, money2(p.price)),
+      h("td", {class: "n"}, money(p.value)), h("td", {class: "n"}, pct(p.weight, 1)), h("td", {class: "n " + (p.pnl >= 0 ? "pass" : "fail")}, money(p.pnl)),
+      h("td", {class: "n"}, p.stop ? money2(p.stop) : h("span", {class: "fail"}, "NONE")), h("td", {class: "n"}, p.target ? money2(p.target) : "–")))))));
+}
+function renderPlans() {
+  const el = document.getElementById("s-plans"); el.replaceChildren();
+  el.append(h("h2", {}, "Recent plans"));
+  el.append(h("table", {}, h("thead", {}, h("tr", {}, ["#", "Decided", "Trades", "Status"].map(c => h("th", {}, c)))),
+    h("tbody", {}, S.plans.map(p => h("tr", {}, h("td", {}, p.id), h("td", {}, p.asof), h("td", {}, p.for_date), h("td", {class: "status " + p.status, style: "border:0"}, p.status))))));
+}
+function renderEvents() {
+  const el = document.getElementById("s-events"); el.replaceChildren();
+  el.append(h("h2", {}, "Events"));
+  el.append(h("div", {class: "scroll small"}, h("table", {}, h("tbody", {}, S.events.map(e =>
+    h("tr", {class: "ev-" + e.level}, h("td", {class: "muted"}, e.ts.slice(5, 19).replace("T", " ")), h("td", {}, e.kind), h("td", {}, e.message)))))));
+}
+
+document.getElementById("b-kill").onclick = () => { if (confirm("Halt all trading? Entry orders are cancelled; protective stops stay.")) api("kill", {}); };
+document.getElementById("b-flatten").onclick = () => { if (prompt("This cancels all orders and CLOSES EVERY POSITION at market.\nType FLATTEN to continue.") === "FLATTEN") api("kill", {flatten: true, reason: "kill + flatten pressed in the UI"}); };
+document.getElementById("b-resume").onclick = () => { const c = prompt("Resume trading? Type RESUME."); if (c) api("resume", {confirm: c}); };
+refresh(); setInterval(refresh, 4000);
+</script>
+</body>
+</html>

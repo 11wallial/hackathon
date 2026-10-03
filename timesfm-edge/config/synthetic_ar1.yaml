@@ -1,0 +1,22 @@
+# Harness self-test 2: returns follow r[t] = 0.15 r[t-1] + e. The theoretical hit rate
+# for a model that knows phi is 0.5 + asin(0.15)/pi = 0.548. The harness must find
+# this edge; whether it clears break-even depends on costs, which is the point.
+name: synthetic_ar1_phi015
+data:
+  source: synthetic
+  synthetic_kind: ar1
+  synthetic_phi: 0.15
+  synthetic_n: 20000
+  synthetic_seed: 2
+  bar: 1h
+forecast:
+  forecaster: ar1
+  input_mode: log_price
+  context_len: 512
+  horizon: 1
+walkforward:
+  n_splits: 8
+  embargo_bars: 24
+  min_train_bars: 3000
+stats:
+  ledger_path: reports/experiment_ledger_synthetic.json

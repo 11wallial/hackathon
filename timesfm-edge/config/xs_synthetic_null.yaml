@@ -1,0 +1,29 @@
+# Cross-sectional LEAK DETECTOR: no edge anywhere, market factor plus pure noise.
+# Any verdict other than STOP here means the panel pipeline leaks.
+name: xs_synthetic_null
+data:
+  source: synthetic
+  synthetic_n: 2600
+  synthetic_seed: 22
+  bar: 1d
+cross_section:
+  enabled: true
+  n_assets: 60
+  residualise: beta
+  top_fraction: 0.2
+  synthetic_phi_idio: 0.0
+forecast:
+  forecaster: ar1
+  input_mode: log_price
+  context_len: 256
+  horizon: 1
+walkforward:
+  n_splits: 6
+  embargo_bars: 5
+  min_train_bars: 600
+costs:
+  commission_bps: 5.0
+  half_spread_bps: 0.5
+  slippage_bps: 2.0
+stats:
+  ledger_path: reports/experiment_ledger_xs.json

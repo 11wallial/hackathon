@@ -1,0 +1,31 @@
+# Cross-sectional self-test: a small edge planted ONLY in the idiosyncratic component,
+# with an unpredictable market factor on top. phi_idio=0.06 is deliberately weak: it is
+# roughly what an honest cross-sectional signal looks like, and it is far below the
+# 0.15 that still failed in the single-instrument 1h setup.
+name: xs_synthetic_edge
+data:
+  source: synthetic
+  synthetic_n: 2600
+  synthetic_seed: 21
+  bar: 1d
+cross_section:
+  enabled: true
+  n_assets: 60
+  residualise: beta
+  top_fraction: 0.2
+  synthetic_phi_idio: 0.06
+forecast:
+  forecaster: ar1
+  input_mode: log_price
+  context_len: 256
+  horizon: 1
+walkforward:
+  n_splits: 6
+  embargo_bars: 5
+  min_train_bars: 600
+costs:
+  commission_bps: 5.0
+  half_spread_bps: 0.5
+  slippage_bps: 2.0
+stats:
+  ledger_path: reports/experiment_ledger_xs.json

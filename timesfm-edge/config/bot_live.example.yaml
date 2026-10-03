@@ -1,0 +1,35 @@
+# STAGE 3: REAL MONEY. Copy to config/bot_live.yaml and read every line.
+#
+# What this file cannot do: make the strategy work. As of this commit the Phase 1 gate has not been
+# run on real data, so there is NO measured evidence of an edge. The honest prior for a zero-shot
+# foundation model on liquid large caps is an information coefficient near zero, which means a
+# loss of roughly the trading costs. Treat the capital below as money you expect to lose.
+#
+#   export APCA_API_KEY_ID=...                   # the LIVE account's keys
+#   export APCA_API_SECRET_KEY=...
+#   export TFM_LIVE=YES_TRADE_REAL_MONEY         # required in the environment of the process that trades
+name: bot_live
+run_config: config/xs_equity_1d_timesfm25.yaml
+capital: 15000                                   # below ~$15k, whole-share rounding distorts a 28-name book
+risk:
+  max_capital: 15000                             # NO DEFAULT: you must choose the ceiling. Start small.
+  daily_loss_limit: 0.01                         # tighter than paper: halt at -1% in a day
+  max_drawdown_halt: 0.05                        # halt at -5% from peak
+  max_gross_exposure: 1.1
+  max_net_exposure: 0.10
+  max_name_weight: 0.06
+  flatten_on_halt: false                         # a halt cancels entries and keeps stops; true also closes everything
+book:
+  top_fraction: 0.2
+  gross: 1.0                                     # start at half of this if you want a gentler first week
+broker:
+  kind: alpaca_live
+  order_tif: opg
+live:
+  require_approval: true                         # you read and approve every day's plan. Leave this on.
+  min_paper_days: 5                              # sessions of paper / alpaca_paper before live is allowed
+  # Each of these is an explicit, logged decision to proceed without evidence. Uncomment only if you
+  # mean it; every run records that the override is in force.
+  # acknowledge_gate_not_passed: true            # live without a passing real-data Phase 1 report
+  # acknowledge_short_paper_run: true            # live with fewer than min_paper_days of paper history
+smoothing_halflife: 5.0

@@ -1,0 +1,13 @@
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+statsmodels>=0.14
+arch>=6.0
+matplotlib>=3.8
+pyarrow>=14
+pyyaml>=6
+requests>=2.31
+pytest>=8
+# model (CPU): pip install torch --index-url https://download.pytorch.org/whl/cpu
+timesfm>=3.0.1
+torch>=2.0

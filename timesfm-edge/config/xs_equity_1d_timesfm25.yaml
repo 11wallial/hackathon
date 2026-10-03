@@ -1,0 +1,128 @@
+# THE SETUP THE ARITHMETIC PICKED.
+#
+# A US equity cross-section is the only configuration in the feasibility survey that
+# clears BOTH hurdles at once:
+#   cost:  ~3 bps round trip against ~157 bps of daily residual move, so k = 0.019 and
+#          the break-even hit rate is 0.512, against 0.738 for hourly BTC perps.
+#   power: at IC 0.03 it reaches Sharpe ~1.2 and needs ~7 years to tell that from luck.
+#          Twenty years of daily equity history is available. Crypto perps offer four,
+#          which is why every crypto configuration comes back underpowered.
+#
+# Decisions are subsampled to roughly weekly (max_test_points). Be clear about why:
+# it is a COMPUTE COMPROMISE, not a free improvement. Equity costs are low enough that
+# daily decisions are genuinely better (Sharpe 0.83 vs 0.53 at IC 0.03, and 9.9 years
+# to prove instead of 16.7), because the extra breadth outweighs the extra turnover.
+# Weekly still clears the bar with 20 years of history, and it cuts TimesFM inference
+# from days to hours on a CPU.
+#   On a GPU, or if you are patient: set max_test_points to null for daily decisions.
+# The annualisation factor is derived from the decision timestamps either way, so the
+# reported Sharpe stays honest at whatever frequency you choose.
+#
+# SURVIVORSHIP: set cross_section.universe_path to a point-in-time membership file
+# (see data/universe_TEMPLATE.csv). Without one, the report says so in bold and every
+# positive result should be read as an upper bound. The symbol list below is today's
+# large caps, which is exactly the biased list the warning is about.
+name: xs_equity_1d_timesfm25
+data:
+  source: equity
+  equity_source: stooq      # stooq | yahoo, both keyless
+  bar: 1d
+  years: 20
+cross_section:
+  enabled: true
+  residualise: beta
+  top_fraction: 0.2
+  universe_path: null       # -> data/sp500_membership.csv once you build one
+  min_names_per_bar: 20
+  symbols:
+    - AAPL
+    - MSFT
+    - JNJ
+    - XOM
+    - KO
+    - PG
+    - WMT
+    - CVX
+    - PFE
+    - INTC
+    - CSCO
+    - MRK
+    - T
+    - VZ
+    - HD
+    - MCD
+    - BA
+    - CAT
+    - MMM
+    - IBM
+    - GE
+    - DIS
+    - NKE
+    - UNH
+    - LLY
+    - ABT
+    - TMO
+    - MDT
+    - BMY
+    - AMGN
+    - GILD
+    - COST
+    - TGT
+    - LOW
+    - SBUX
+    - ORCL
+    - QCOM
+    - TXN
+    - ADBE
+    - AMAT
+    - MU
+    - AMD
+    - JPM
+    - BAC
+    - WFC
+    - C
+    - GS
+    - MS
+    - AXP
+    - USB
+    - PNC
+    - SPG
+    - DUK
+    - SO
+    - NEE
+    - D
+    - AEP
+    - EXC
+    - COP
+    - SLB
+    - HAL
+    - OXY
+    - DE
+    - HON
+    - UPS
+    - FDX
+    - UNP
+    - LMT
+    - NOC
+    - RTX
+forecast:
+  forecaster: timesfm
+  model_id: google/timesfm-2.5-200m-pytorch
+  model_family: timesfm2.5
+  input_mode: log_price
+  context_len: 512
+  horizon: 1
+  device: cpu
+  batch_size: 32
+walkforward:
+  n_splits: 8
+  embargo_bars: 10
+  min_train_bars: 750
+  max_test_points: 120      # per fold; ~weekly decisions, ~70k TimesFM calls in total
+costs:
+  commission_bps: 0.2       # near zero at most retail brokers
+  half_spread_bps: 0.8      # ~1 cent on a $100 large cap, crossed both ways
+  slippage_bps: 0.5
+stats:
+  alpha: 0.05
+  ledger_path: reports/experiment_ledger.json

@@ -1,0 +1,114 @@
+{
+  "24eff2895127": {
+    "first_run": "2026-09-06T08:55:27.574019+00:00",
+    "last_run": "2026-09-06T09:10:29.494655+00:00",
+    "results": [
+      {
+        "ic": -0.06071660739999,
+        "p_value": 1.0,
+        "sharpe": -9.61633895648834,
+        "verdict": "STOP"
+      },
+      {
+        "ic": 0.060716607399989984,
+        "p_value": 0.0016196802932573195,
+        "sharpe": 4.284065126127732,
+        "verdict": "PROCEED"
+      },
+      {
+        "ic": 0.060716607399989984,
+        "p_value": 0.023497611296524945,
+        "sharpe": 3.8723460821353646,
+        "verdict": "PROCEED"
+      }
+    ],
+    "run_count": 6,
+    "variant": {
+      "cross_section": {
+        "enabled": true,
+        "gross": 1.0,
+        "n_assets": 60,
+        "residualise": "beta",
+        "symbols": null,
+        "synthetic_phi_idio": 0.06,
+        "top_fraction": 0.2
+      },
+      "data": {
+        "bar": "1d",
+        "csv_path": null,
+        "market": "um",
+        "source": "synthetic",
+        "symbol": "BTCUSDT",
+        "synthetic_kind": "random_walk",
+        "synthetic_n": 2600,
+        "synthetic_phi": 0.0,
+        "synthetic_seed": 21,
+        "years": 4.0
+      },
+      "forecast": {
+        "context_len": 256,
+        "forecaster": "ar1",
+        "horizon": 1,
+        "input_mode": "log_price",
+        "model_family": "auto",
+        "model_id": "google/timesfm-2.5-200m-pytorch"
+      },
+      "walkforward": {
+        "embargo_bars": 5,
+        "max_test_points": null,
+        "min_train_bars": 600,
+        "n_splits": 6
+      }
+    }
+  },
+  "2a97c3ae9b68": {
+    "first_run": "2026-09-06T08:55:17.793377+00:00",
+    "last_run": "2026-09-06T08:55:19.169588+00:00",
+    "results": [
+      {
+        "ic": 0.0029618567269426486,
+        "p_value": 0.9999999999999966,
+        "sharpe": -3.038051638020541,
+        "verdict": "STOP"
+      }
+    ],
+    "run_count": 2,
+    "variant": {
+      "cross_section": {
+        "enabled": true,
+        "gross": 1.0,
+        "n_assets": 60,
+        "residualise": "beta",
+        "symbols": null,
+        "synthetic_phi_idio": 0.0,
+        "top_fraction": 0.2
+      },
+      "data": {
+        "bar": "1d",
+        "csv_path": null,
+        "market": "um",
+        "source": "synthetic",
+        "symbol": "BTCUSDT",
+        "synthetic_kind": "random_walk",
+        "synthetic_n": 2600,
+        "synthetic_phi": 0.0,
+        "synthetic_seed": 22,
+        "years": 4.0
+      },
+      "forecast": {
+        "context_len": 256,
+        "forecaster": "ar1",
+        "horizon": 1,
+        "input_mode": "log_price",
+        "model_family": "auto",
+        "model_id": "google/timesfm-2.5-200m-pytorch"
+      },
+      "walkforward": {
+        "embargo_bars": 5,
+        "max_test_points": null,
+        "min_train_bars": 600,
+        "n_splits": 6
+      }
+    }
+  }
+}
